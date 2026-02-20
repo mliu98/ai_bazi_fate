@@ -88,6 +88,7 @@ router.post('/calculate', auth, async (req, res) => {
       level: compatibility.level,
       bazi: report.bazi,
       wuxing: report.wuxing,
+      wuxingSummary: compatibility.wuxing_relation,
       highlights: report.highlights,
       advice: report.advice,
       sign: report.sign,
