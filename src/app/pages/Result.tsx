@@ -4,7 +4,6 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Share2, Lock, Download, Home, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '/utils/supabase/info';
 import html2canvas from 'html2canvas';
 
 interface ReportData {

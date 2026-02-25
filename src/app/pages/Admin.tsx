@@ -9,7 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../components/ui/badge';
 import { ArrowLeft, Key, Loader2, Copy, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '/utils/supabase/info';
+
+// Placeholder - Admin功能需要后端API支持
+const projectId = 'your-project-id';
+const publicAnonKey = 'your-anon-key';
 
 interface Code {
   code: string;

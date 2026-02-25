@@ -1,105 +1,79 @@
-# 八字缘分测算 (AI Bazi)
+# AI 八字缘分测算
 
-> 基于八字合婚的 AI 算命 Web 应用
+一个基于传统八字命理的 AI 姻缘匹配应用，用 React + Tailwind 构建。
+
+## 功能特点
+
+- 🎀 浪漫粉色主题设计
+- 📅 八字排盘计算
+- 💕 姻缘匹配评分
+- ✨ AI 生成的缘分报告（亮点、建议、姻缘签）
+- 📱 小红书分享图片生成
 
 ## 技术栈
 
-- **前端**: Vue 3 + Vite + Vant + Pinia
-- **后端**: Node.js + Express
-- **数据库**: Supabase (PostgreSQL)
-- **AI**: DeepSeek API
-
-## 项目结构
-
-```
-ai-bazi-1/
-├── frontend/          # 前端项目
-│   ├── src/
-│   │   ├── views/    # 页面组件
-│   │   ├── components/
-│   │   ├── stores/   # Pinia 状态管理
-│   │   ├── utils/   # 工具函数
-│   │   └── router/
-│   └── ...
-├── backend/           # 后端项目
-│   ├── routes/       # API 路由
-│   ├── services/    # 业务逻辑
-│   ├── middleware/  # 中间件
-│   └── server.js
-└── ...
-```
+- **前端框架**: React 18 + React Router
+- **样式**: Tailwind CSS + Shadcn UI
+- **构建工具**: Vite
+- **动画**: Framer Motion
 
 ## 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-# 前端
-cd frontend
-npm install
-
-# 后端
-cd backend
 npm install
 ```
 
-### 2. 配置环境变量
-
-复制 `.env.example` 为 `.env` 并填写配置：
-
-```env
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_key
-
-# DeepSeek API
-DEEPSEEK_API_KEY=your_deepseek_key
-
-# Admin
-ADMIN_PASSWORD=your_admin_password
-```
-
-### 3. 创建数据库
-
-在 Supabase 后台执行 SQL：
-
-```sql
-CREATE TABLE activation_codes (
-  code VARCHAR(9) PRIMARY KEY,
-  type TEXT CHECK (type IN ('free', 'full', 'unlimited')),
-  total_uses INT NOT NULL,
-  used_count INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,
-  note TEXT
-);
-```
-
-### 4. 启动开发服务器
+### 2. 启动开发服务器
 
 ```bash
-# 后端 (端口 3000)
-cd backend
-npm start
-
-# 前端 (端口 5173)
-cd frontend
 npm run dev
 ```
 
-## 功能
+访问 http://localhost:5173
 
-- ✅ 激活码系统（体验码/完整码/无限码）
-- ✅ 八字计算引擎
-- ✅ 合婚评分
-- ✅ AI 报告生成
-- ✅ 运营后台
-- ✅ 分享功能
+### 3. 构建生产版本
 
-## 部署
+```bash
+npm run build
+```
 
-详见开发文档中的 PHASE 9 部署指南。
+## 项目结构
+
+```
+├── src/
+│   ├── app/
+│   │   ├── components/    # UI 组件
+│   │   ├── pages/         # 页面组件
+│   │   └── routes.ts      # 路由配置
+│   └── styles/            # 全局样式
+├── index.html
+├── package.json
+└── vite.config.ts
+```
+
+## 页面说明
+
+- **Home** - 首页/落地页
+- **Activate** - 激活码输入
+- **Input** - 生日信息和问卷
+- **Loading** - 分析中动画
+- **Result** - 缘分报告
+- **Admin** - 激活码管理（需要后端 API）
+
+## 注意事项
+
+- 当前版本使用本地 mock 数据生成报告
+- Admin 页面需要配置 Supabase Edge Functions 才能使用
+- 如需使用 DeepSeek API 生成更精准的报告，需要部署 Vercel Serverless Function 作为代理
+
+## 部署到 Vercel
+
+1. 将代码推送到 GitHub
+2. 在 Vercel 中导入项目
+3. 构建命令: `npm run build`
+4. 输出目录: `dist`
 
 ## License
 
