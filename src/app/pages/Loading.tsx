@@ -1,201 +1,210 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  type WuXing,
+  baseScore,
+  buildReportContent,
+  detectWarnings,
+  detectSpecial,
+} from '../../lib/copyLibrary';
 
-const mysticQuotes = [
-  '正在推算天干地支...',
-  '五行相生相克运算中...',
-  '查看你们的八字命盘...',
-  '姻缘线正在连接...',
-  '专属报告生成中...',
-  '命理师正在解读...',
+const quotes = [
+  '正在推算天干地支…',
+  '五行相生相克运算中…',
+  '查看你们的八字命盘…',
+  '姻缘线正在连接…',
+  '专属报告生成中…',
+  '命理师正在解读…',
 ];
 
+const tianGan = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const diZhi   = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const wuXing  = ['木','木','火','火','土','土','金','金','水','水']; // 天干五行
+const wxCls   = ['bz-wx-wood','bz-wx-wood','bz-wx-fire','bz-wx-fire','bz-wx-earth','bz-wx-earth','bz-wx-metal','bz-wx-metal','bz-wx-water','bz-wx-water'];
+
+// ── 年柱：以立春（约每年公历2月4日）为年份分界 ──────────────────────────
+function getYearIdx(year: number, month: number, day: number) {
+  // 2月4日之前仍属上一年（立春简化取2月4日）
+  const y = (month < 2 || (month === 2 && day < 4)) ? year - 1 : year;
+  return { tgIdx: ((y - 4) % 10 + 10) % 10, dzIdx: ((y - 4) % 12 + 12) % 12 };
+}
+
+// ── 月柱：以节气的「节」为月份分界 + 五虎遁年起月法 ────────────────────────
+// 各月「节」的近似公历日期（index = 月份-1）
+// 1=小寒, 2=立春, 3=惊蛰, 4=清明, 5=立夏, 6=芒种,
+// 7=小暑, 8=立秋, 9=白露, 10=寒露, 11=立冬, 12=大雪
+const JIEQI_DAY  = [6, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7];
+// 节后月支（0=子…11=亥）：1月小寒后=丑(1), 2月立春后=寅(2)…12月大雪后=子(0)
+const DZ_AFTER   = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
+// 节前月支（仍属上一个月）
+const DZ_BEFORE  = [0, 1, 2, 3, 4, 5, 6, 7, 8,  9, 10, 11];
+// 五虎遁：寅月（正月）起始天干，按年干索引
+// 甲/己→丙(2), 乙/庚→戊(4), 丙/辛→庚(6), 丁/壬→壬(8), 戊/癸→甲(0)
+const WUHU_YING  = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0];
+
+function getMonthIdx(month: number, day: number, yearTgIdx: number) {
+  const dzIdx  = day >= JIEQI_DAY[month - 1] ? DZ_AFTER[month - 1] : DZ_BEFORE[month - 1];
+  const seq    = (dzIdx - 2 + 12) % 12; // 从寅月(dzIdx=2)起算的月序
+  const tgIdx  = (WUHU_YING[yearTgIdx] + seq) % 10;
+  return { tgIdx, dzIdx };
+}
+
+// ── 日柱：以1900-01-01=甲戌日（干支序号10）为基准推算 ─────────────────────
+function getDayIdx(year: number, month: number, day: number) {
+  const base   = new Date(1900, 0, 1);
+  const target = new Date(year, month - 1, day);
+  const diff   = Math.round((target.getTime() - base.getTime()) / 86400000);
+  const idx    = ((10 + diff) % 60 + 60) % 60;
+  return { tgIdx: idx % 10, dzIdx: idx % 12 };
+}
+
+// ── 时柱：五鼠遁日起时法（由日干决定子时天干）────────────────────────────
+// 甲/己→甲(0), 乙/庚→丙(2), 丙/辛→戊(4), 丁/壬→庚(6), 戊/癸→壬(8)
+const WUSHU_ZI = [0, 2, 4, 6, 8, 0, 2, 4, 6, 8];
+// Input 表单 hour 编码：0=子时, 2=丑时, 4=寅时…22=亥时（均为偶数）
+function getHourIdx(hour: number, dayTgIdx: number) {
+  const dzIdx = hour / 2; // 子=0, 丑=1, …亥=11
+  const tgIdx = (WUSHU_ZI[dayTgIdx] + dzIdx) % 10;
+  return { tgIdx, dzIdx };
+}
+
+// ── 组合四柱 ──────────────────────────────────────────────────────────────
+function calcGanzhi(year: number, month: number, day: number, hour?: number) {
+  const yr  = getYearIdx(year, month, day);
+  const mo  = getMonthIdx(month, day, yr.tgIdx);
+  const dy  = getDayIdx(year, month, day);
+  const hr  = (hour !== undefined && hour >= 0)
+    ? getHourIdx(hour, dy.tgIdx)
+    : { tgIdx: 0, dzIdx: 0 }; // 时辰不详默认甲子
+
+  const col = ({ tgIdx, dzIdx }: { tgIdx: number; dzIdx: number }) => ({
+    tg: tianGan[tgIdx], dz: diZhi[dzIdx], wx: wuXing[tgIdx], wxCls: wxCls[tgIdx],
+  });
+  return [col(yr), col(mo), col(dy), col(hr)];
+}
+
+const hourLabels = ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'];
+const getHourLabel = (hour?: number) => hour !== undefined ? (hourLabels[Math.floor(hour / 2)] ?? '时辰不详') : '时辰不详';
+
+function generateMockResult(data: any) {
+  const { nameA = '你', nameB = 'TA', user, partner, questionnaire = {} } = data;
+  const gzA = calcGanzhi(user.year, user.month, user.day, user.hour);
+  const gzB = calcGanzhi(partner.year, partner.month, partner.day, partner.hour);
+  // 命主五行取年柱天干的五行（已含立春分界）
+  const elemA = gzA[0].wx as WuXing;
+  const elemB = gzB[0].wx as WuXing;
+
+  // 从话术库计算缘分分数
+  const warnings = detectWarnings(gzA, gzB);
+  const specials = detectSpecial(gzA, gzB);
+  const score = baseScore(elemA, elemB, specials, warnings);
+  const scoreLabel = score >= 90 ? '天作之合' : score >= 80 ? '良缘天定' : score >= 70 ? '有缘有分' : '缘浅情深';
+  const dateA = `${user.year}年${user.month}月${user.day}日 · ${getHourLabel(user.hour)}`;
+  const dateB = `${partner.year}年${partner.month}月${partner.day}日 · ${getHourLabel(partner.hour)}`;
+
+  // 从话术库生成各模块内容
+  const content = buildReportContent({ nameA, nameB, elemA, elemB, gzA, gzB, score, questionnaire });
+
+  // subScores 微调：基于总分浮动
+  const subScores = [
+    { label: '性格相合', value: Math.min(99, score + Math.floor(Math.random()*8) - 2) },
+    { label: '情感默契', value: Math.min(99, score + Math.floor(Math.random()*8) - 4) },
+    { label: '五行相生', value: Math.min(99, score + Math.floor(Math.random()*8) - 2) },
+    { label: '婚姻运势', value: Math.min(99, score + Math.floor(Math.random()*8) - 4) },
+  ];
+
+  // scoreTags：基于特殊关系和五行
+  const scoreTags = [
+    { text: content.wuxingRel.tag, style: 'fill' as const },
+    ...(specials.includes('日主六合') ? [{ text: '日主六合', style: 'outline' as const }] : []),
+    ...(specials.includes('日支三合') ? [{ text: '日支三合', style: 'outline' as const }] : []),
+    ...(specials.includes('月柱暗合') ? [{ text: '月柱暗合', style: 'outline' as const }] : []),
+    ...(specials.length === 0 ? [{ text: '缘分天定', style: 'outline' as const }] : []),
+  ].slice(0, 3);
+
+  return {
+    nameA, nameB, dateA, dateB, score, scoreLabel,
+    scoreDesc:  content.scoreDesc,
+    scoreTags,
+    subScores,
+    ganzhiA: gzA, ganzhiB: gzB,
+    wuxingRel: content.wuxingRel,
+    highlights: content.highlights,
+    warnings:   content.warnings,
+    advice:     content.advice,
+    liunian:    content.liunian,
+    timing:     content.timing,
+    zhuangyun:  content.zhuangyun,
+    sign:       content.sign,
+    shareCard:  content.shareCard,
+  };
+}
+
 export default function Loading() {
-  const navigate = useNavigate();
-  const [quote, setQuote] = useState(mysticQuotes[0]);
+  const navigate  = useNavigate();
+  const [quote,   setQuote]   = useState(quotes[0]);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Rotate quotes
-    const quoteInterval = setInterval(() => {
-      setQuote(mysticQuotes[Math.floor(Math.random() * mysticQuotes.length)]);
-    }, 1500);
+    const qI = setInterval(() => setQuote(quotes[Math.floor(Math.random()*quotes.length)]), 1400);
+    const pI = setInterval(() => setProgress(p => p >= 90 ? p : p + Math.random()*12), 300);
 
-    // Progress animation
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) return prev;
-        return prev + Math.random() * 15;
-      });
-    }, 300);
-
-    // 纯前端模式：直接生成假数据
-    const generateReport = async () => {
+    const run = async () => {
       try {
-        const inputData = localStorage.getItem('inputData');
-        if (!inputData) {
-          toast.error('数据丢失，请重新输入');
-          navigate('/input');
-          return;
-        }
-
-        const data = JSON.parse(inputData);
-
-        // 模拟API延迟
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // 生成假数据（placeholder）
-        const mockResult = generateMockResult(data);
-        
-        // 保存结果
-        localStorage.setItem('reportResult', JSON.stringify(mockResult));
-        
-        // 更新剩余次数
-        const remaining = parseInt(localStorage.getItem('codeRemaining') || '0') - 1;
-        localStorage.setItem('codeRemaining', remaining.toString());
-
+        const raw = localStorage.getItem('inputData');
+        if (!raw) { toast.error('数据丢失，请重新输入'); navigate('/input'); return; }
+        await new Promise(r => setTimeout(r, 2200));
+        const result = generateMockResult(JSON.parse(raw));
+        localStorage.setItem('reportResult', JSON.stringify(result));
+        const rem = parseInt(localStorage.getItem('codeRemaining') || '0') - 1;
+        localStorage.setItem('codeRemaining', String(rem));
         setProgress(100);
-
-        // 短暂延迟后跳转
-        setTimeout(() => {
-          navigate('/result');
-        }, 1000);
-      } catch (error) {
-        console.error('Error generating report:', error);
+        setTimeout(() => navigate('/result'), 700);
+      } catch {
         toast.error('生成失败，请重试');
-        setTimeout(() => {
-          navigate('/input');
-        }, 2000);
+        setTimeout(() => navigate('/input'), 2000);
       }
     };
 
-    // 生成模拟报告数据
-    function generateMockResult(data: any) {
-      const { user, partner } = data;
-      
-      // 简单的假八字计算
-      const tianGan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
-      const diZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-      const wuXing = ['木', '木', '火', '火', '土', '土', '金', '金', '水', '水'];
-      
-      const userElement = wuXing[(user.year - 4) % 10];
-      const partnerElement = wuXing[(partner.year - 4) % 10];
-      
-      const userBazi = {
-        year: `${tianGan[(user.year - 4) % 10]}${diZhi[(user.year - 4) % 12]}`,
-        month: `${tianGan[(user.month) % 10]}${diZhi[(user.month) % 12]}`,
-        day: `${tianGan[(user.day) % 10]}${diZhi[(user.day) % 12]}`,
-        hour: user.hour !== undefined ? `${tianGan[(user.hour) % 10]}${diZhi[(Math.floor((user.hour || 0) / 2) + 1) % 12]}` : '未知',
-        element: userElement
-      };
-      
-      const partnerBazi = {
-        year: `${tianGan[(partner.year - 4) % 10]}${diZhi[(partner.year - 4) % 12]}`,
-        month: `${tianGan[(partner.month) % 10]}${diZhi[(partner.month) % 12]}`,
-        day: `${tianGan[(partner.day) % 10]}${diZhi[(partner.day) % 12]}`,
-        hour: partner.hour !== undefined ? `${tianGan[(partner.hour) % 10]}${diZhi[(Math.floor((partner.hour || 0) / 2) + 1) % 12]}` : '未知',
-        element: partnerElement
-      };
-
-      // 随机分数 60-99
-      const score = Math.floor(Math.random() * 40) + 60;
-      
-      let level = '一般';
-      if (score >= 85) level = '天作之合';
-      else if (score >= 75) level = '良缘相伴';
-      else if (score >= 65) level = '中等缘分';
-
-      return {
-        score,
-        level,
-        bazi: {
-          user: userBazi,
-          partner: partnerBazi
-        },
-        highlights: [
-          `你们的五行属性${userElement}与${partnerElement}相合度很高，天生就有一种互相吸引的磁场`,
-          '从八字来看，你们的相识方式暗合了姻缘线的走向',
-          '双方日柱相合，代表在情感交流上能够心有灵犀，互相理解对方的需求',
-          '流年运势显示你们在一起时会有好事发生',
-          '你们的属相组合在传统命理中被认为是上等婚配'
-        ],
-        advice: [
-          `${userElement}属性的你在感情中需要更多安全感，对方可以多主动表达爱意`,
-          '建议保持沟通节奏，不要急于推进关系',
-          '遇到分歧时要用温和的方式表达想法',
-          '可以一起做一些放松的活动来增进感情',
-          '多关注对方的情绪变化，给予支持和理解'
-        ],
-        sign: '缘起前世，情动心间。八字相合虽有波折却是真心。愿你们珍惜当下，共赴未来，情深不负相思意，携手同行白首时。',
-        warning: '你们在处理冲突时可能会有不同的方式，需要学会互相理解对方的沟通习惯，避免冷战。',
-        timing: '根据流年推算，2026年春季（3-5月）和秋季（9-11月）是你们关系发展的良好时机。',
-        shareText: `我和TA测了八字缘分，得分${score}分！命理师说我们${userElement}${partnerElement}相合，${score >= 85 ? '天作之合' : '良缘可期'}～想知道你和TA的缘分吗？`,
-        remaining: 98
-      };
-    }
-
-    generateReport();
-
-    return () => {
-      clearInterval(quoteInterval);
-      clearInterval(progressInterval);
-    };
+    run();
+    return () => { clearInterval(qI); clearInterval(pI); };
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        {/* Animated Icon */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-red-600 to-pink-600 rounded-full mb-6 shadow-2xl animate-pulse">
-            <div className="text-5xl">🔮</div>
-          </div>
-          
-          {/* BaZi Animation */}
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="text-3xl animate-bounce" style={{ animationDelay: '0ms' }}>甲</div>
-            <div className="text-3xl animate-bounce" style={{ animationDelay: '100ms' }}>子</div>
-            <div className="text-2xl text-red-600 animate-pulse">❤️</div>
-            <div className="text-3xl animate-bounce" style={{ animationDelay: '200ms' }}>乙</div>
-            <div className="text-3xl animate-bounce" style={{ animationDelay: '300ms' }}>丑</div>
-          </div>
+    <div className="bz-page">
+      <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }} id="loadPetals" />
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            {quote}
-          </h2>
-          
-          <p className="text-gray-600">
-            AI命理师正在为你生成专属报告
-          </p>
+      <div className="bz-loading-center">
+        <div className="bz-loading-orb">🔮</div>
+
+        <div className="bz-loading-chars">
+          {['甲','子'].map((c,i) => (
+            <span key={i} className="bz-loading-char" style={{ animationDelay:`${i*0.15}s` }}>{c}</span>
+          ))}
+          <span className="bz-loading-heart">❤</span>
+          {['乙','丑'].map((c,i) => (
+            <span key={i} className="bz-loading-char" style={{ animationDelay:`${(i+2)*0.15}s` }}>{c}</span>
+          ))}
         </div>
 
-        {/* Progress Bar */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-600">测算进度</span>
-            <span className="text-sm font-semibold text-red-600">{Math.round(progress)}%</span>
+        <div className="bz-loading-quote">{quote}</div>
+        <div className="bz-loading-sub">AI命理师正在为你生成专属报告</div>
+
+        <div className="bz-progress-wrap">
+          <div className="bz-progress-label">
+            <span className="bz-progress-text">测算进度</span>
+            <span className="bz-progress-pct">{Math.round(progress)}%</span>
           </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-red-600 via-pink-600 to-orange-600 transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          
-          <div className="flex items-center justify-center mt-6 text-gray-400">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            <span className="text-sm">预计还需 3 秒</span>
+          <div className="bz-progress-bar-bg">
+            <div className="bz-progress-bar-fill" style={{ width:`${progress}%` }} />
           </div>
         </div>
 
-        {/* Decorative Elements */}
-        <div className="mt-8 flex items-center justify-center gap-4 text-4xl opacity-20">
-          <span className="animate-pulse" style={{ animationDelay: '0ms' }}>❀</span>
-          <span className="animate-pulse" style={{ animationDelay: '200ms' }}>✿</span>
-          <span className="animate-pulse" style={{ animationDelay: '400ms' }}>❁</span>
-          <span className="animate-pulse" style={{ animationDelay: '600ms' }}>✾</span>
+        <div style={{ marginTop:28, display:'flex', gap:16, opacity:.25 }}>
+          {['❀','✿','❁','✾'].map((c,i) => (
+            <span key={i} style={{ fontSize:24, color:'var(--bz-rose)', animation:`bz-pulse ${1.5+i*0.2}s ease-in-out infinite` }}>{c}</span>
+          ))}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import Activate from "./pages/Activate";
 import Input from "./pages/Input";
 import Loading from "./pages/Loading";
 import Result from "./pages/Result";
+import ShareCard from "./pages/ShareCard";
 import Admin from "./pages/Admin";
 
 export const router = createBrowserRouter([
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
   {
     path: "/result",
     Component: Result,
+  },
+  {
+    path: "/share",
+    Component: ShareCard,
   },
   {
     path: "/admin",

@@ -1,384 +1,256 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from '../components/ui/button';
-import { Label } from '../components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, ArrowRight, User, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 const hours = [
-  { value: '0', label: '子时 (23-01点)' },
-  { value: '2', label: '丑时 (01-03点)' },
-  { value: '4', label: '寅时 (03-05点)' },
-  { value: '6', label: '卯时 (05-07点)' },
-  { value: '8', label: '辰时 (07-09点)' },
-  { value: '10', label: '巳时 (09-11点)' },
-  { value: '12', label: '午时 (11-13点)' },
-  { value: '14', label: '未时 (13-15点)' },
-  { value: '16', label: '申时 (15-17点)' },
-  { value: '18', label: '酉时 (17-19点)' },
-  { value: '20', label: '戌时 (19-21点)' },
-  { value: '22', label: '亥时 (21-23点)' },
+  { value: '0',  label: '子时（23-01点）' },
+  { value: '2',  label: '丑时（01-03点）' },
+  { value: '4',  label: '寅时（03-05点）' },
+  { value: '6',  label: '卯时（05-07点）' },
+  { value: '8',  label: '辰时（07-09点）' },
+  { value: '10', label: '巳时（09-11点）' },
+  { value: '12', label: '午时（11-13点）' },
+  { value: '14', label: '未时（13-15点）' },
+  { value: '16', label: '申时（15-17点）' },
+  { value: '18', label: '酉时（17-19点）' },
+  { value: '20', label: '戌时（19-21点）' },
+  { value: '22', label: '亥时（21-23点）' },
   { value: '-1', label: '不知道' },
 ];
 
-const questionnaire = {
-  q1: {
-    question: '你们相识的方式是？',
-    options: ['一见钟情', '慢慢走进', '网络相识', '朋友介绍']
-  },
-  q2: {
-    question: '你感觉你们之间更像？',
-    options: ['磁铁相吸', '相似灵魂', '互补拼图', '还没感觉到']
-  },
-  q3: {
-    question: '你们有「同步心灵」的瞬间吗？',
-    options: ['经常有', '偶尔有', '没有', '不确定']
-  },
-  q4: {
-    question: '对方对你来说像？',
-    options: ['太阳', '月亮', '北极星', '流星']
-  },
-  q5: {
-    question: '你们认识多久了？',
-    options: ['不到一个月', '1-6个月', '半年以上', '还没在一起']
-  }
-};
+const questionnaire = [
+  { key: 'q1', question: '你们相识的方式是？',         options: ['一见钟情', '慢慢走进', '网络相识', '朋友介绍'] },
+  { key: 'q2', question: '你感觉你们之间更像？',         options: ['磁铁相吸', '相似灵魂', '互补拼图', '还没感觉到'] },
+  { key: 'q3', question: '你们有「同步心灵」的瞬间吗？', options: ['经常有',   '偶尔有',   '没有',     '不确定'] },
+  { key: 'q4', question: '对方对你来说像？',             options: ['太阳',     '月亮',     '北极星',   '流星'] },
+  { key: 'q5', question: '你们认识多久了？',             options: ['不到一个月','1-6个月',  '半年以上', '还没在一起'] },
+];
 
 export default function Input() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [step, setStep]     = useState(1);
   const [gender, setGender] = useState('female');
-  
-  const [userBirth, setUserBirth] = useState({
-    year: '',
-    month: '',
-    day: '',
-    hour: '-1'
-  });
+  const [nameA, setNameA]   = useState('');
+  const [nameB, setNameB]   = useState('');
 
-  const [partnerBirth, setPartnerBirth] = useState({
-    year: '',
-    month: '',
-    day: '',
-    hour: '-1'
-  });
-
-  const [answers, setAnswers] = useState({
-    q1: '',
-    q2: '',
-    q3: '',
-    q4: '',
-    q5: ''
-  });
+  const [userBirth, setUserBirth]       = useState({ year: '', month: '', day: '', hour: '-1' });
+  const [partnerBirth, setPartnerBirth] = useState({ year: '', month: '', day: '', hour: '-1' });
+  const [answers, setAnswers]           = useState<Record<string, string>>({});
 
   const currentYear = 2026;
-  const years = Array.from({ length: 50 }, (_, i) => currentYear - 18 - i);
+  const years  = Array.from({ length: 50 }, (_, i) => currentYear - 18 - i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const days   = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  useEffect(() => {
+    const container = document.getElementById('inputPetals');
+    if (!container) return;
+    const colors = ['#f7c5c5','#f4a7b9','#e07a9a','#f9d4df','#fbc4d4'];
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'bz-petal';
+      const size = 8 + Math.random() * 10;
+      p.style.cssText = `left:${Math.random()*100}%;top:${-10-Math.random()*20}px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${size}px;height:${size*1.2}px;border-radius:${Math.random()>.5?'50% 0 50% 0':'0 50% 0 50%'};animation-duration:${5+Math.random()*8}s;animation-delay:${Math.random()*8}s;`;
+      container.appendChild(p);
+    }
+  }, []);
 
   const validateStep1 = () => {
-    if (!userBirth.year || !userBirth.month || !userBirth.day) {
-      toast.error('请填写完整的生日信息');
-      return false;
-    }
-    if (!partnerBirth.year || !partnerBirth.month || !partnerBirth.day) {
-      toast.error('请填写对方完整的生日信息');
-      return false;
-    }
+    if (!nameA.trim()) { toast.error('请输入你的名字'); return false; }
+    if (!nameB.trim()) { toast.error('请输入对方的名字'); return false; }
+    if (!userBirth.year || !userBirth.month || !userBirth.day) { toast.error('请填写你的完整生日信息'); return false; }
+    if (!partnerBirth.year || !partnerBirth.month || !partnerBirth.day) { toast.error('请填写对方完整的生日信息'); return false; }
     return true;
   };
 
-  const validateStep2 = () => {
-    if (!answers.q1 || !answers.q2 || !answers.q3 || !answers.q4 || !answers.q5) {
-      toast.error('请完成所有问题');
-      return false;
-    }
-    return true;
-  };
-
-  const handleNext = () => {
-    if (step === 1 && validateStep1()) {
-      setStep(2);
-    }
-  };
+  const handleNext = () => { if (validateStep1()) setStep(2); };
 
   const handleSubmit = () => {
-    if (!validateStep2()) return;
-
-    // Check activation code
+    const unanswered = questionnaire.filter(q => !answers[q.key]);
+    if (unanswered.length > 0) { toast.error('请完成所有问题'); return; }
     const code = localStorage.getItem('activationCode');
-    if (!code) {
-      toast.error('请先输入激活码');
-      navigate('/activate');
-      return;
-    }
-
-    // Save data to localStorage
+    if (!code) { toast.error('请先输入激活码'); navigate('/activate'); return; }
     const data = {
-      code,
-      gender,
-      user: {
-        year: parseInt(userBirth.year),
-        month: parseInt(userBirth.month),
-        day: parseInt(userBirth.day),
-        hour: parseInt(userBirth.hour) >= 0 ? parseInt(userBirth.hour) : undefined
-      },
-      partner: {
-        year: parseInt(partnerBirth.year),
-        month: parseInt(partnerBirth.month),
-        day: parseInt(partnerBirth.day),
-        hour: parseInt(partnerBirth.hour) >= 0 ? parseInt(partnerBirth.hour) : undefined
-      },
-      questionnaire: answers
+      code, gender,
+      nameA: nameA.trim(), nameB: nameB.trim(),
+      user:    { year: +userBirth.year,    month: +userBirth.month,    day: +userBirth.day,    hour: +userBirth.hour    >= 0 ? +userBirth.hour    : undefined },
+      partner: { year: +partnerBirth.year, month: +partnerBirth.month, day: +partnerBirth.day, hour: +partnerBirth.hour >= 0 ? +partnerBirth.hour : undefined },
+      questionnaire: answers,
     };
-
     localStorage.setItem('inputData', JSON.stringify(data));
     navigate('/loading');
   };
 
+  const allAnswered = questionnaire.every(q => answers[q.key]);
+
+  const selectStyle: React.CSSProperties = { borderColor: 'rgba(196,90,122,.3)', fontFamily: 'Noto Serif SC,serif', fontSize: 13 };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 px-6 py-8">
-      {/* Header */}
-      <div className="max-w-2xl mx-auto mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => step === 1 ? navigate('/activate') : setStep(1)}
-          className="mb-4 text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          返回
-        </Button>
+    <div className="bz-page">
+      <div id="inputPetals" className="bz-petals-bg" />
 
-        {/* Progress */}
-        <div className="flex items-center justify-center mb-6">
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' : 'bg-pink-200 text-pink-600'} font-semibold`}>
-            1
-          </div>
-          <div className={`h-1 w-16 mx-2 ${step >= 2 ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-pink-200'}`} />
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' : 'bg-pink-200 text-pink-600'} font-semibold`}>
-            2
-          </div>
-        </div>
+      <svg className="bz-blossom-deco left" width="160" height="280" viewBox="0 0 200 320">
+        <line x1="175" y1="10" x2="55" y2="310" stroke="#c45a7a" strokeWidth="2.5"/>
+        <line x1="108" y1="130" x2="22" y2="110" stroke="#c45a7a" strokeWidth="1.8"/>
+        <g><circle cx="20" cy="105" r="9" fill="#f4a7b9"/><circle cx="9" cy="94" r="6" fill="#f7c5c5"/><circle cx="32" cy="97" r="7" fill="#e07a9a"/><circle cx="14" cy="118" r="6" fill="#f4a7b9"/></g>
+      </svg>
+      <svg className="bz-blossom-deco right" width="160" height="280" viewBox="0 0 200 320">
+        <line x1="25" y1="10" x2="145" y2="310" stroke="#c45a7a" strokeWidth="2.5"/>
+        <line x1="92" y1="130" x2="178" y2="110" stroke="#c45a7a" strokeWidth="1.8"/>
+        <g><circle cx="180" cy="105" r="9" fill="#f4a7b9"/><circle cx="191" cy="94" r="6" fill="#f7c5c5"/><circle cx="168" cy="97" r="7" fill="#e07a9a"/><circle cx="186" cy="118" r="6" fill="#f4a7b9"/></g>
+      </svg>
 
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {step === 1 ? '填写生日信息' : '玄学小问卷'}
+      <div className="bz-container" style={{ paddingTop: 0 }}>
+        <div className="bz-report-header" style={{ paddingTop: 40, paddingBottom: 20 }}>
+          <div className="bz-subtitle">✦ 八 字 合 婚 · 缘 分 测 算 ✦</div>
+          <h1 style={{ fontFamily:'Noto Serif SC,serif', fontSize:26, letterSpacing:8, color:'var(--bz-crimson)', fontWeight:500 }}>
+            {step === 1 ? '填 写 信 息' : '玄 学 小 问 卷'}
           </h1>
-          <p className="text-gray-600">
-            {step === 1 ? '请准确填写双方的出生日期' : '回答几个小问题，让测算更准确'}
-          </p>
+          <div className="bz-h-ornament">❀ · ❀ · ❀</div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
+        {/* Step dots */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20, marginBottom:24 }}>
+          {[1,2].map((s,i) => (
+            <div key={s} style={{ display:'flex', alignItems:'center', gap:20 }}>
+              <div style={{
+                width:32, height:32, borderRadius:'50%',
+                background: step>=s ? 'linear-gradient(135deg,#e07a9a,#9b2c52)' : 'rgba(244,167,185,.3)',
+                color: step>=s ? 'white' : 'var(--bz-crimson)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontFamily:'Noto Serif SC,serif', fontSize:13,
+                boxShadow: step>=s ? '0 2px 12px rgba(155,44,82,.3)' : 'none',
+                transition:'all .3s',
+              }}>{s}</div>
+              {i===0 && <div style={{ width:40, height:2, background: step>=2 ? 'linear-gradient(to right,#e07a9a,#9b2c52)' : 'rgba(244,167,185,.3)', borderRadius:2 }}/>}
+            </div>
+          ))}
+        </div>
+
         {step === 1 ? (
-          <div className="space-y-8">
-            {/* Gender Selection */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block text-pink-700">我是</Label>
-              <RadioGroup value={gender} onValueChange={setGender} className="flex gap-4">
-                <div className="flex items-center space-x-2 flex-1">
-                  <RadioGroupItem value="female" id="female" className="text-pink-500" />
-                  <Label htmlFor="female" className="flex-1 text-center py-3 px-4 border-2 border-pink-200 rounded-xl cursor-pointer hover:bg-pink-50 transition-colors text-pink-700 font-medium">
-                    女生 👧
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 flex-1">
-                  <RadioGroupItem value="male" id="male" className="text-pink-500" />
-                  <Label htmlFor="male" className="flex-1 text-center py-3 px-4 border-2 border-pink-200 rounded-xl cursor-pointer hover:bg-pink-50 transition-colors text-pink-700 font-medium">
-                    男生 👦
-                  </Label>
-                </div>
-              </RadioGroup>
+          <>
+            {/* Gender */}
+            <div className="bz-form-section">
+              <div className="bz-form-label">我 是</div>
+              <div style={{ display:'flex', gap:10 }}>
+                {[{v:'female',l:'女生 👧'},{v:'male',l:'男生 👦'}].map(({v,l}) => (
+                  <button key={v} onClick={() => setGender(v)} style={{
+                    flex:1, padding:'10px 0', borderRadius:12,
+                    fontFamily:'Noto Serif SC,serif', fontSize:13, letterSpacing:3, cursor:'pointer',
+                    border: gender===v ? '1.5px solid var(--bz-rose)' : '1px solid rgba(196,90,122,.3)',
+                    background: gender===v ? 'linear-gradient(135deg,rgba(244,167,185,.3),rgba(224,122,154,.15))' : 'rgba(255,255,255,.5)',
+                    color:'var(--bz-crimson)', transition:'all .2s',
+                  }}>{l}</button>
+                ))}
+              </div>
             </div>
 
-            {/* User Birth */}
-            <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-6 border border-pink-100">
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-pink-600" />
-                <h3 className="font-semibold text-gray-800">我的生日</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                <Select value={userBirth.year} onValueChange={(v) => setUserBirth({ ...userBirth, year: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="年" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map(year => (
-                      <SelectItem key={year} value={year.toString()}>{year}年</SelectItem>
-                    ))}
-                  </SelectContent>
+            {/* Person A */}
+            <div className="bz-form-section">
+              <div className="bz-form-label">我 的 信 息</div>
+              <input
+                className="bz-text-input"
+                style={{ marginBottom:10 }}
+                placeholder="输入你的名字（1-4字）"
+                value={nameA}
+                onChange={e => setNameA(e.target.value)}
+                maxLength={4}
+              />
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:8 }}>
+                <Select value={userBirth.year}  onValueChange={v => setUserBirth({...userBirth, year:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="年" /></SelectTrigger>
+                  <SelectContent>{years.map(y=><SelectItem key={y} value={y.toString()}>{y}年</SelectItem>)}</SelectContent>
                 </Select>
-
-                <Select value={userBirth.month} onValueChange={(v) => setUserBirth({ ...userBirth, month: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="月" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(month => (
-                      <SelectItem key={month} value={month.toString()}>{month}月</SelectItem>
-                    ))}
-                  </SelectContent>
+                <Select value={userBirth.month} onValueChange={v => setUserBirth({...userBirth, month:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="月" /></SelectTrigger>
+                  <SelectContent>{months.map(m=><SelectItem key={m} value={m.toString()}>{m}月</SelectItem>)}</SelectContent>
                 </Select>
-
-                <Select value={userBirth.day} onValueChange={(v) => setUserBirth({ ...userBirth, day: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="日" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {days.map(day => (
-                      <SelectItem key={day} value={day.toString()}>{day}日</SelectItem>
-                    ))}
-                  </SelectContent>
+                <Select value={userBirth.day}   onValueChange={v => setUserBirth({...userBirth, day:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="日" /></SelectTrigger>
+                  <SelectContent>{days.map(d=><SelectItem key={d} value={d.toString()}>{d}日</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Select value={userBirth.hour} onValueChange={(v) => setUserBirth({ ...userBirth, hour: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="出生时辰" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hours.map(hour => (
-                    <SelectItem key={hour.value} value={hour.value}>{hour.label}</SelectItem>
-                  ))}
-                </SelectContent>
+              <Select value={userBirth.hour} onValueChange={v => setUserBirth({...userBirth, hour:v})}>
+                <SelectTrigger style={selectStyle}><SelectValue placeholder="出生时辰（可选）" /></SelectTrigger>
+                <SelectContent>{hours.map(h=><SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
-            {/* Partner Birth */}
-            <div className="bg-gradient-to-r from-pink-50 to-orange-50 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-pink-600" />
-                <h3 className="font-semibold text-gray-800">对方的生日</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                <Select value={partnerBirth.year} onValueChange={(v) => setPartnerBirth({ ...partnerBirth, year: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="年" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map(year => (
-                      <SelectItem key={year} value={year.toString()}>{year}年</SelectItem>
-                    ))}
-                  </SelectContent>
+            {/* Person B */}
+            <div className="bz-form-section">
+              <div className="bz-form-label">TA 的 信 息</div>
+              <input
+                className="bz-text-input"
+                style={{ marginBottom:10 }}
+                placeholder="输入对方名字（1-4字）"
+                value={nameB}
+                onChange={e => setNameB(e.target.value)}
+                maxLength={4}
+              />
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:8 }}>
+                <Select value={partnerBirth.year}  onValueChange={v => setPartnerBirth({...partnerBirth, year:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="年" /></SelectTrigger>
+                  <SelectContent>{years.map(y=><SelectItem key={y} value={y.toString()}>{y}年</SelectItem>)}</SelectContent>
                 </Select>
-
-                <Select value={partnerBirth.month} onValueChange={(v) => setPartnerBirth({ ...partnerBirth, month: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="月" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(month => (
-                      <SelectItem key={month} value={month.toString()}>{month}月</SelectItem>
-                    ))}
-                  </SelectContent>
+                <Select value={partnerBirth.month} onValueChange={v => setPartnerBirth({...partnerBirth, month:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="月" /></SelectTrigger>
+                  <SelectContent>{months.map(m=><SelectItem key={m} value={m.toString()}>{m}月</SelectItem>)}</SelectContent>
                 </Select>
-
-                <Select value={partnerBirth.day} onValueChange={(v) => setPartnerBirth({ ...partnerBirth, day: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="日" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {days.map(day => (
-                      <SelectItem key={day} value={day.toString()}>{day}日</SelectItem>
-                    ))}
-                  </SelectContent>
+                <Select value={partnerBirth.day}   onValueChange={v => setPartnerBirth({...partnerBirth, day:v})}>
+                  <SelectTrigger style={selectStyle}><SelectValue placeholder="日" /></SelectTrigger>
+                  <SelectContent>{days.map(d=><SelectItem key={d} value={d.toString()}>{d}日</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Select value={partnerBirth.hour} onValueChange={(v) => setPartnerBirth({ ...partnerBirth, hour: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="出生时辰" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hours.map(hour => (
-                    <SelectItem key={hour.value} value={hour.value}>{hour.label}</SelectItem>
-                  ))}
-                </SelectContent>
+              <Select value={partnerBirth.hour} onValueChange={v => setPartnerBirth({...partnerBirth, hour:v})}>
+                <SelectTrigger style={selectStyle}><SelectValue placeholder="出生时辰（可选）" /></SelectTrigger>
+                <SelectContent>{hours.map(h=><SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
-            <Button
-              onClick={handleNext}
-              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              下一步
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
+            <button className="bz-btn bz-btn-primary" style={{ width:'100%', marginTop:8 }} onClick={handleNext}>
+              下一步 →
+            </button>
+          </>
         ) : (
-          <div className="space-y-6">
-            {/* Progress indicator */}
-            <div className="flex items-center justify-between mb-6">
-              {Object.keys(questionnaire).map((key, idx) => (
-                <div
-                  key={key}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                    answers[key as keyof typeof answers] !== undefined
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg'
-                      : 'bg-pink-100 text-pink-400'
-                  }`}
-                >
-                  {idx + 1}
-                </div>
-              ))}
-            </div>
-
-            {/* Questions with beautiful cards */}
-            {Object.entries(questionnaire).map(([key, q], idx) => (
-              <div 
-                key={key} 
-                className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
-                  answers[key as keyof typeof answers] !== undefined
-                    ? 'bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200'
-                    : 'bg-white border-2 border-pink-100 hover:border-pink-300'
-                }`}
-              >
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-200 to-rose-200 rounded-bl-full opacity-50" />
-                
-                <div className="p-6 relative z-10">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs flex items-center justify-center">
-                      {idx + 1}
-                    </span>
-                    <h3 className="font-semibold text-gray-800 text-lg">{q.question}</h3>
-                  </div>
-                  
-                  <RadioGroup
-                    value={answers[key as keyof typeof answers]}
-                    onValueChange={(v) => setAnswers({ ...answers, [key]: v })}
-                    className="grid grid-cols-2 gap-3"
-                  >
-                    {q.options.map((option, optIdx) => (
-                      <Label
-                        key={optIdx}
-                        htmlFor={`${key}-${optIdx}`}
-                        className={`flex items-center justify-center py-4 px-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 ${
-                          answers[key as keyof typeof answers] === option
-                            ? 'border-pink-500 bg-gradient-to-r from-pink-50 to-rose-50 text-pink-700 font-semibold'
-                            : 'border-pink-100 hover:border-pink-300 hover:bg-pink-50 text-gray-600'
-                        }`}
-                      >
-                        <RadioGroupItem value={option} id={`${key}-${optIdx}`} className="sr-only" />
-                        {option}
-                      </Label>
-                    ))}
-                  </RadioGroup>
+          <>
+            {questionnaire.map((q, idx) => (
+              <div key={q.key} className="bz-form-section">
+                <div className="bz-form-label">{idx+1} · {q.question}</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {q.options.map(opt => (
+                    <button key={opt} onClick={() => setAnswers({...answers,[q.key]:opt})} style={{
+                      padding:'10px 8px', borderRadius:10,
+                      fontFamily:'Noto Serif SC,serif', fontSize:12, letterSpacing:2,
+                      cursor:'pointer', transition:'all .2s',
+                      border: answers[q.key]===opt ? '1.5px solid var(--bz-rose)' : '1px solid rgba(196,90,122,.25)',
+                      background: answers[q.key]===opt ? 'linear-gradient(135deg,rgba(244,167,185,.35),rgba(224,122,154,.2))' : 'rgba(255,255,255,.5)',
+                      color:'var(--bz-crimson)',
+                      boxShadow: answers[q.key]===opt ? '0 2px 10px rgba(155,44,82,.15)' : 'none',
+                    }}>{opt}</button>
+                  ))}
                 </div>
               </div>
             ))}
 
-            <Button
-              onClick={handleSubmit}
-              disabled={Object.keys(answers).length < Object.keys(questionnaire).length}
-              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              测算我们的缘分 ✨
-            </Button>
-          </div>
+            <div style={{ display:'flex', gap:10, marginTop:8 }}>
+              <button className="bz-btn bz-btn-outline" style={{ flex:1 }} onClick={() => setStep(1)}>← 返回</button>
+              <button
+                className="bz-btn bz-btn-primary"
+                style={{ flex:2, opacity: allAnswered ? 1 : .55, cursor: allAnswered ? 'pointer' : 'not-allowed' }}
+                onClick={handleSubmit}
+                disabled={!allAnswered}
+              >
+                测算我们的缘分 ✨
+              </button>
+            </div>
+          </>
         )}
+
+        <div className="bz-disclaimer" style={{ marginTop:24 }}>
+          本报告基于传统命理文化生成，仅供娱乐参考<br />不构成任何情感或人生决策建议
+        </div>
+        <div className="bz-footer">✦ 八字缘分测算 · 月老赐缘 ✦</div>
       </div>
     </div>
   );
