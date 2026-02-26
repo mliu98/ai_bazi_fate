@@ -282,7 +282,7 @@ export default function ShareCard() {
               </div>
               <div className="bz-footer-right">
                 <div className="bz-footer-cta">去测测你们的缘分 →</div>
-                <div className="bz-footer-brand">八字缘分测算</div>
+                <div className="bz-footer-brand">TA是我的正缘吗？</div>
                 <div className="bz-footer-seal">缘</div>
               </div>
             </div>

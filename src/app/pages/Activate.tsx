@@ -29,7 +29,7 @@ export default function Activate() {
       <div className="bz-container" style={{ paddingTop: 0 }}>
         {/* Header */}
         <div className="bz-report-header" style={{ paddingBottom: 24 }}>
-          <div className="bz-subtitle">✦ 八 字 缘 分 测 算 ✦</div>
+          <div className="bz-subtitle">✦ TA是我的正缘吗？ ✦</div>
           <h1 style={{ fontFamily:'Noto Serif SC,serif', fontSize:26, letterSpacing:8, color:'var(--bz-crimson)', fontWeight:500 }}>
             输 入 激 活 码
           </h1>
@@ -107,7 +107,7 @@ export default function Activate() {
           ← 返 回 首 页
         </button>
 
-        <div className="bz-footer">✦ 八字缘分测算 · 月老赐缘 ✦</div>
+        <div className="bz-footer">✦ TA是我的正缘吗？ · 月老赐缘 ✦</div>
       </div>
     </div>
   );
