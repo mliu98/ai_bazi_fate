@@ -250,7 +250,7 @@ export default function Input() {
         <div className="bz-disclaimer" style={{ marginTop:24 }}>
           本报告基于传统命理文化生成，仅供娱乐参考<br />不构成任何情感或人生决策建议
         </div>
-        <div className="bz-footer">✦ 八字缘分测算 · 月老赐缘 ✦</div>
+        <div className="bz-footer">✦ TA是我的正缘吗？ · 月老赐缘 ✦</div>
       </div>
     </div>
   );
