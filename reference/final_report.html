@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>八字缘分测算报告</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --blush: #f7c5c5; --petal: #f4a7b9; --rose: #e07a9a;
+  --deep: #c45a7a; --crimson: #9b2c52;
+  --gold: #c9956a; --gold-light: #f0d4b0; --ink: #3d1a28; --paper: #fdf0f3;
+  --warn: #d4752a; --warn-light: #fbebd8;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 30% 10%, #fde8ef 0%, #f9d0de 50%, #eea8c0 100%);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 300;
+  color: var(--ink);
+  position: relative; overflow-x: hidden;
+}
+
+/* ── Petals ── */
+.petals-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.petal { position: absolute; opacity: .4; animation: fall linear infinite; }
+@keyframes fall {
+  0%   { transform: translateY(-30px) rotate(0deg); opacity: 0; }
+  8%   { opacity: .4; }
+  92%  { opacity: .2; }
+  100% { transform: translateY(110vh) rotate(720deg) translateX(40px); opacity: 0; }
+}
+
+/* ── Branch deco ── */
+.blossom-deco { position: fixed; pointer-events: none; opacity: .12; z-index: 0; }
+.blossom-deco.left  { left: -20px; bottom: 60px; }
+.blossom-deco.right { right: -20px; top: 40px; }
+
+/* ── Layout ── */
+.container {
+  position: relative; z-index: 1;
+  max-width: 520px; margin: 0 auto;
+  padding: 0 16px 80px;
+}
+
+/* ── Header ── */
+.report-header {
+  text-align: center;
+  padding: 52px 0 32px;
+}
+.report-header .subtitle {
+  font-size: 11px; letter-spacing: 8px; color: var(--crimson); opacity: .55;
+  margin-bottom: 12px; font-weight: 300;
+}
+.report-header h1 {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 30px; letter-spacing: 10px; color: var(--crimson);
+  text-shadow: 0 2px 12px rgba(155,44,82,.15);
+  font-weight: 500;
+}
+.report-header .h-ornament { color: var(--rose); font-size: 13px; letter-spacing: 6px; opacity: .5; margin-top: 8px; font-weight: 300; }
+
+/* ── People strip ── */
+.people-strip {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(228,140,168,.4);
+  border-radius: 48px; padding: 14px 28px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 20px rgba(155,44,82,.1);
+  margin-bottom: 28px;
+}
+.ps-person { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.ps-name { font-family: 'Noto Serif SC', serif; font-size: 18px; color: var(--crimson); letter-spacing: 3px; font-weight: 500; }
+.ps-date { font-size: 10px; color: var(--deep); opacity: .7; letter-spacing: 1px; }
+.ps-wuxing { display: flex; gap: 4px; }
+.wx { font-size: 9px; padding: 2px 7px; border-radius: 10px; font-family: 'Noto Serif SC', serif; letter-spacing: 1px; }
+.wx-fire  { background:#ffe0e0; color:#c0392b; }
+.wx-water { background:#dbeeff; color:#2471a3; }
+.wx-wood  { background:#e0f5e0; color:#27ae60; }
+.wx-metal { background:#f0f0e0; color:#7d6608; }
+.wx-earth { background:#f5ead0; color:#935116; }
+.ps-heart { font-size: 24px; color: var(--rose); animation: heartbeat 2.2s ease-in-out infinite; }
+@keyframes heartbeat { 0%,100%{transform:scale(1)} 30%{transform:scale(1.24)} 60%{transform:scale(1.09)} }
+
+/* ── Section card ── */
+.section {
+  background: rgba(255,255,255,.58);
+  border: 1px solid rgba(228,140,168,.35);
+  border-radius: 20px; padding: 24px 22px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 24px rgba(155,44,82,.08);
+  margin-bottom: 20px;
+  position: relative; overflow: hidden;
+}
+.section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--petal), var(--rose), var(--petal), transparent);
+}
+.section-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 11px; letter-spacing: 6px; color: var(--gold);
+  font-weight: 400;
+  text-align: center; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+}
+.section-title::before,.section-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201,149,106,.4), transparent);
+}
+.section.warn-section {
+  background: rgba(255,248,242,.7);
+  border-color: rgba(212,117,42,.3);
+}
+.section.warn-section::before {
+  background: linear-gradient(90deg, transparent, #f0b888, var(--warn), #f0b888, transparent);
+}
+
+/* ── Score section ── */
+.score-main {
+  display: flex; align-items: center; justify-content: center; gap: 28px;
+  padding: 8px 0 16px;
+}
+.score-circle {
+  position: relative;
+  width: 130px; height: 130px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.score-circle svg { position: absolute; inset: 0; }
+.score-circle .score-num {
+  font-family: 'Noto Serif SC', serif; font-size: 46px; line-height: 1;
+  color: var(--crimson); position: relative; z-index: 1;
+  text-shadow: 0 2px 10px rgba(155,44,82,.15);
+  font-weight: 300;
+}
+.score-circle .score-pct {
+  font-size: 12px; color: var(--deep); letter-spacing: 1px;
+  position: relative; z-index: 1;
+}
+.score-right { display: flex; flex-direction: column; gap: 10px; }
+.score-label {
+  font-family: 'Noto Serif SC', serif; font-size: 20px;
+  color: var(--crimson); letter-spacing: 4px; font-weight: 500;
+}
+.score-desc { font-size: 12px; color: var(--deep); line-height: 1.9; opacity: .85; max-width: 160px; }
+.score-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.score-tag {
+  font-family: 'Noto Serif SC', serif; font-size: 10px; letter-spacing: 1px;
+  padding: 4px 12px; border-radius: 20px;
+  background: linear-gradient(135deg, var(--rose), var(--deep));
+  color: white; box-shadow: 0 2px 8px rgba(155,44,82,.3);
+}
+.score-tag.outline {
+  background: transparent; color: var(--crimson);
+  border: 1px solid rgba(196,90,122,.45);
+  box-shadow: none;
+}
+
+/* ── Sub bars ── */
+.sub-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(228,140,168,.3); }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-family: 'Noto Serif SC', serif; font-size: 11px; color: var(--crimson); letter-spacing: 1px; width: 52px; flex-shrink: 0; }
+.bar-bg { flex: 1; height: 5px; background: rgba(244,167,185,.25); border-radius: 10px; overflow: hidden; }
+.bar-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(to right, var(--petal), var(--crimson));
+  transform: scaleX(0); transform-origin: left;
+  animation: barGrow .9s cubic-bezier(.25,1,.5,1) forwards;
+}
+@keyframes barGrow { to { transform: scaleX(1); } }
+.bar-val { font-family: 'Noto Serif SC', serif; font-size: 11px; color: var(--crimson); width: 28px; text-align: right; }
+
+/* ── Bazi boards ── */
+.bazi-board {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.bazi-person-label {
+  font-family: 'Noto Serif SC', serif; font-size: 11px; letter-spacing: 3px;
+  color: var(--deep); opacity: .7; margin-bottom: 6px;
+}
+.bazi-pillars { display: flex; gap: 8px; justify-content: center; }
+.pillar {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  opacity: 0; transform: translateY(8px);
+  animation: fadeUp .5s ease forwards;
+}
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+.pillar-name {
+  font-size: 9px; letter-spacing: 2px; color: var(--gold); opacity: .8;
+  font-family: 'Noto Serif SC', serif;
+}
+.pillar-tg, .pillar-dz {
+  width: 38px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif; font-size: 20px;
+  border-radius: 4px; position: relative;
+}
+.pillar-tg {
+  background: linear-gradient(to bottom, rgba(244,167,185,.3), rgba(244,167,185,.1));
+  border: 1px solid rgba(196,90,122,.35);
+  color: var(--crimson);
+}
+.pillar-dz {
+  background: linear-gradient(to bottom, rgba(244,167,185,.15), rgba(244,167,185,.05));
+  border: 1px solid rgba(196,90,122,.22);
+  color: var(--deep);
+}
+.pillar-wx {
+  font-size: 9px; padding: 1px 6px; border-radius: 10px;
+  font-family: 'Noto Serif SC', serif;
+}
+.bazi-sep { color: rgba(196,90,122,.3); font-size: 20px; align-self: center; margin-top: 10px; }
+.wuxing-rel {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 12px; padding: 10px 16px;
+  background: rgba(255,255,255,.4); border-radius: 12px;
+  border: 1px solid rgba(228,140,168,.3);
+}
+.wuxing-rel .rel-tag {
+  font-family: 'Noto Serif SC', serif; font-size: 12px;
+  padding: 4px 14px; border-radius: 20px;
+  background: linear-gradient(135deg, #ffe0ec, #ffd0e5);
+  color: var(--crimson); border: 1px solid rgba(196,90,122,.3);
+}
+.wuxing-rel .rel-desc { font-size: 11px; color: var(--deep); opacity: .8; letter-spacing: 1px; }
+
+/* ── Highlights / items ── */
+.item-list { display: flex; flex-direction: column; gap: 12px; }
+.item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.4);
+  border: 1px solid rgba(228,140,168,.25);
+}
+.item-icon { font-size: 18px; flex-shrink: 0; line-height: 1.4; }
+.item-body {}
+.item-title {
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: var(--crimson); letter-spacing: 2px; margin-bottom: 4px; font-weight: 500;
+}
+.item-desc { font-size: 12px; color: var(--ink); opacity: .75; line-height: 2; font-weight: 300; }
+.item.warn {
+  background: rgba(251,235,216,.5);
+  border-color: rgba(212,117,42,.25);
+}
+.item.warn .item-title { color: var(--warn); }
+.warn-badge {
+  display: inline-block; font-size: 9px; letter-spacing: 2px; padding: 2px 8px;
+  border-radius: 10px; background: rgba(212,117,42,.15);
+  color: var(--warn); border: 1px solid rgba(212,117,42,.3);
+  font-family: 'Noto Serif SC', serif; margin-right: 6px;
+}
+
+/* ── Advice ── */
+.advice-list { display: flex; flex-direction: column; gap: 10px; }
+.advice-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.38);
+}
+.advice-num {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--petal), var(--deep));
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-family: 'Noto Serif SC', serif; margin-top: 1px;
+}
+.advice-text { font-size: 12px; color: var(--ink); line-height: 2; opacity: .8; font-weight: 300; }
+
+/* ── Liunian ── */
+.liunian-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.liunian-cell {
+  border-radius: 12px; padding: 12px 10px; text-align: center;
+  background: rgba(255,255,255,.4);
+  border: 1px solid rgba(228,140,168,.25);
+}
+.liunian-cell.active {
+  background: linear-gradient(140deg, rgba(244,167,185,.3), rgba(224,122,154,.2));
+  border-color: rgba(196,90,122,.4);
+  box-shadow: 0 2px 12px rgba(155,44,82,.12);
+}
+.liunian-year {
+  font-family: 'Noto Serif SC', serif; font-size: 15px;
+  color: var(--crimson); letter-spacing: 1px;
+}
+.liunian-gz { font-size: 10px; color: var(--deep); opacity: .7; margin: 3px 0; letter-spacing: 1px; }
+.liunian-stars { display: flex; justify-content: center; gap: 2px; margin: 4px 0 3px; }
+.star { font-size: 9px; color: var(--rose); }
+.liunian-note { font-size: 9px; color: var(--deep); opacity: .65; letter-spacing: 1px; }
+.liunian-cell.active .liunian-note { color: var(--crimson); opacity: .8; }
+
+/* ── Timing tips ── */
+.timing-list { display: flex; flex-direction: column; gap: 10px; }
+.timing-item {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.38);
+  border-left: 3px solid var(--petal);
+}
+.timing-item.best { border-left-color: var(--rose); }
+.timing-item.caution { border-left-color: #f0c080; }
+.timing-date {
+  font-family: 'Noto Serif SC', serif; font-size: 12px;
+  color: var(--crimson); letter-spacing: 1px; min-width: 60px;
+}
+.timing-desc { font-size: 11px; color: var(--ink); opacity: .8; line-height: 1.8; }
+.timing-badge {
+  font-size: 9px; padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+  font-family: 'Noto Serif SC', serif; letter-spacing: 1px;
+}
+.timing-badge.best { background: rgba(224,122,154,.15); color: var(--rose); border: 1px solid rgba(224,122,154,.3); }
+.timing-badge.caution { background: rgba(240,192,128,.2); color: var(--warn); border: 1px solid rgba(240,192,128,.4); }
+
+/* ── Zhuangyun ── */
+.zhuangyun-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.zhuangyun-item {
+  padding: 14px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.4);
+  border: 1px solid rgba(228,140,168,.25);
+}
+.zhuangyun-icon { font-size: 20px; margin-bottom: 6px; }
+.zhuangyun-title {
+  font-family: 'Noto Serif SC', serif; font-size: 12px;
+  color: var(--crimson); letter-spacing: 2px; margin-bottom: 5px;
+}
+.zhuangyun-desc { font-size: 11px; color: var(--ink); opacity: .75; line-height: 1.8; }
+
+/* ── Yinyuan sign embed ── */
+.sign-section { padding: 0; overflow: visible; background: none; border: none; box-shadow: none; }
+.sign-section::before { display: none; }
+.sign-embed {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.sign-title-row {
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+}
+.sign-title-row span { font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 5px; color: var(--gold); }
+.sign-title-row::before,.sign-title-row::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201,149,106,.4), transparent);
+}
+.sign-wrap {
+  position: relative;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.thread {
+  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 1.5px; height: 60px;
+  background: linear-gradient(to bottom, rgba(180,80,100,.18), var(--rose));
+}
+.knot {
+  position: absolute; top: -70px; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px; background: var(--rose); border-radius: 50%;
+  box-shadow: 0 0 10px rgba(224,122,154,.7);
+}
+.sign-card {
+  position: relative; width: 230px;
+  background: linear-gradient(178deg, #fff8fa 0%, var(--paper) 45%, #fae3eb 100%);
+  border-radius: 4px 4px 115px 115px;
+  padding: 36px 24px 68px;
+  box-shadow:
+    0 0 0 1.5px #e8a0b4,
+    0 0 0 6px rgba(232,160,180,.22),
+    0 28px 60px rgba(155,44,82,.22),
+    inset 0 1px 0 rgba(255,255,255,.85);
+  transform-origin: top center;
+  animation: swaySign 7s ease-in-out infinite;
+}
+@keyframes swaySign { 0%,100%{transform:rotate(-1.2deg)} 50%{transform:rotate(1.2deg)} }
+.sign-corner { position: absolute; font-size: 22px; opacity: .28; }
+.sign-corner.tl { top: 28px; left: 8px; transform: rotate(-22deg); }
+.sign-corner.tr { top: 28px; right: 8px; transform: rotate(22deg); }
+.sign-corner.bl { bottom: 78px; left: 8px; transform: rotate(18deg); }
+.sign-corner.br { bottom: 78px; right: 8px; transform: rotate(-18deg); }
+.sign-head { text-align: center; margin-bottom: 10px; }
+.sign-grade {
+  display: inline-block; font-family: 'Noto Serif SC', serif;
+  font-size: 9px; letter-spacing: 5px; color: var(--gold);
+  padding: 2px 12px; border: 1px solid rgba(201,149,106,.4); border-radius: 2px; margin-bottom: 8px;
+}
+.sign-name {
+  font-family: 'Noto Serif SC', serif; font-size: 20px;
+  color: var(--crimson); letter-spacing: 5px; font-weight: 500;
+}
+.sign-for { text-align: center; font-size: 10px; color: var(--deep); letter-spacing: 2px; opacity: .7; margin-bottom: 8px; }
+.sign-for em { font-style: normal; color: var(--crimson); font-family: 'Noto Serif SC', serif; font-size: 12px; }
+.sign-rule { display: flex; align-items: center; gap: 6px; margin: 8px 0 12px; }
+.sign-rule::before,.sign-rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--petal), transparent); }
+.sign-rule span { color: var(--rose); font-size: 11px; }
+.sign-poem { text-align: center; font-size: 15px; line-height: 2.5; letter-spacing: 3px; color: var(--ink); font-weight: 300; }
+.poem-line { display: block; opacity: 0; transform: translateY(5px); animation: fadeUp .55s ease forwards; }
+.poem-line:nth-child(1) { animation-delay: .4s; }
+.poem-line:nth-child(2) { animation-delay: .75s; }
+.poem-line:nth-child(3) { animation-delay: 1.1s; }
+.poem-line:nth-child(4) { animation-delay: 1.45s; }
+.poem-name { color: var(--crimson); font-family: 'Noto Serif SC', serif; font-size: 16px; }
+.sign-seal {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%) rotate(-3deg);
+  width: 42px; height: 42px; background: var(--crimson); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: rgba(255,240,245,.92); letter-spacing: 0;
+  box-shadow: 0 2px 12px rgba(155,44,82,.45);
+}
+.sign-gz { margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 4px; }
+.gz-c {
+  width: 24px; height: 26px;
+  background: linear-gradient(to bottom, rgba(244,167,185,.22), rgba(244,167,185,.07));
+  border: 1px solid rgba(196,90,122,.3); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif; font-size: 12px; color: var(--crimson);
+  opacity: 0; animation: fadeUp .4s ease forwards;
+}
+.gz-dot { color: rgba(196,90,122,.3); font-size: 12px; opacity: 0; animation: fadeUp .4s ease forwards; }
+
+.score-badge-float {
+  position: absolute; right: -48px; top: 20%;
+  background: linear-gradient(140deg, #eca0bc, var(--deep));
+  color: white; border-radius: 50%; width: 86px; height: 86px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 4px 24px rgba(155,44,82,.4), 0 0 0 5px rgba(236,160,188,.25);
+  animation: pulse 3s ease-in-out infinite;
+}
+.score-badge-float .snum { font-family: 'Noto Serif SC', serif; font-size: 34px; line-height: 1; }
+.score-badge-float .sunit { font-size: 10px; opacity: .88; letter-spacing: 2px; margin-top: 2px; }
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+.sign-tags { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.sign-tag {
+  font-family: 'Noto Serif SC', serif; font-size: 11px; letter-spacing: 2px;
+  padding: 5px 14px; border-radius: 20px;
+}
+.sign-tag.hi {
+  background: linear-gradient(135deg, var(--rose), var(--deep));
+  color: white; box-shadow: 0 2px 10px rgba(155,44,82,.3);
+}
+.sign-tag.outline {
+  background: rgba(255,255,255,.6); border: 1px solid rgba(228,140,168,.5);
+  color: var(--crimson); backdrop-filter: blur(4px);
+}
+
+/* ── CTA ── */
+.cta-section { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+.btn {
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  letter-spacing: 4px; padding: 12px 28px; border-radius: 40px;
+  cursor: pointer; border: none; transition: all .25s ease;
+  font-weight: 400;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--rose), var(--crimson));
+  color: white; box-shadow: 0 4px 18px rgba(155,44,82,.35);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(155,44,82,.45); }
+.btn-outline { background: transparent; color: var(--crimson); border: 1.5px solid rgba(196,90,122,.5); }
+.btn-outline:hover { background: rgba(244,167,185,.15); }
+
+/* ── Divider ornament ── */
+.divider { text-align: center; color: var(--rose); letter-spacing: 8px; font-size: 12px; opacity: .45; margin: 4px 0; }
+
+/* ── Footer ── */
+.footer { text-align: center; padding: 28px 0 8px; font-size: 10px; color: var(--deep); opacity: .45; letter-spacing: 2px; }
+
+/* ── Disclaimer ── */
+.disclaimer {
+  text-align: center; font-size: 10px; color: var(--deep); opacity: .5;
+  letter-spacing: 1px; margin-top: 8px; line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div class="petals-bg" id="petalsContainer"></div>
+
+<svg class="blossom-deco left" width="180" height="300" viewBox="0 0 200 320">
+  <line x1="175" y1="10" x2="55" y2="310" stroke="#c45a7a" stroke-width="2.5"/>
+  <line x1="108" y1="130" x2="22" y2="110" stroke="#c45a7a" stroke-width="1.8"/>
+  <line x1="135" y1="215" x2="38" y2="215" stroke="#c45a7a" stroke-width="1.8"/>
+  <g><circle cx="20" cy="105" r="9" fill="#f4a7b9"/><circle cx="9" cy="94" r="6" fill="#f7c5c5"/><circle cx="32" cy="97" r="7" fill="#e07a9a"/><circle cx="14" cy="118" r="6" fill="#f4a7b9"/><circle cx="30" cy="116" r="5" fill="#f7c5c5"/></g>
+  <g><circle cx="38" cy="210" r="10" fill="#f4a7b9"/><circle cx="25" cy="199" r="6" fill="#f7c5c5"/><circle cx="53" cy="202" r="7" fill="#e07a9a"/><circle cx="30" cy="223" r="6" fill="#f4a7b9"/><circle cx="50" cy="222" r="5" fill="#f7c5c5"/></g>
+</svg>
+<svg class="blossom-deco right" width="180" height="300" viewBox="0 0 200 320">
+  <line x1="25" y1="10" x2="145" y2="310" stroke="#c45a7a" stroke-width="2.5"/>
+  <line x1="92" y1="130" x2="178" y2="110" stroke="#c45a7a" stroke-width="1.8"/>
+  <line x1="65" y1="215" x2="162" y2="215" stroke="#c45a7a" stroke-width="1.8"/>
+  <g><circle cx="180" cy="105" r="9" fill="#f4a7b9"/><circle cx="191" cy="94" r="6" fill="#f7c5c5"/><circle cx="168" cy="97" r="7" fill="#e07a9a"/><circle cx="186" cy="118" r="6" fill="#f4a7b9"/><circle cx="170" cy="116" r="5" fill="#f7c5c5"/></g>
+  <g><circle cx="162" cy="210" r="10" fill="#f4a7b9"/><circle cx="175" cy="199" r="6" fill="#f7c5c5"/><circle cx="147" cy="202" r="7" fill="#e07a9a"/><circle cx="170" cy="223" r="6" fill="#f4a7b9"/><circle cx="150" cy="222" r="5" fill="#f7c5c5"/></g>
+</svg>
+
+<div class="container">
+
+  <!-- ══ Header ══ -->
+  <div class="report-header">
+    <div class="subtitle">✦ 八 字 合 婚 · 命 理 详 解 ✦</div>
+    <h1>缘分测算报告</h1>
+    <div class="h-ornament">❀ · ❀ · ❀</div>
+  </div>
+
+  <!-- ══ People ══ -->
+  <div class="people-strip">
+    <div class="ps-person">
+      <div class="ps-name" id="nameA">晓 雨</div>
+      <div class="ps-date" id="dateA">2000年3月15日 · 卯时</div>
+      <div class="ps-wuxing">
+        <span class="wx wx-wood">木</span>
+        <span class="wx wx-fire">火</span>
+      </div>
+    </div>
+    <div class="ps-heart">❤</div>
+    <div class="ps-person">
+      <div class="ps-name" id="nameB">子 轩</div>
+      <div class="ps-date" id="dateB">1999年8月22日 · 午时</div>
+      <div class="ps-wuxing">
+        <span class="wx wx-fire">火</span>
+        <span class="wx wx-earth">土</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 1. 缘分总分 ══ -->
+  <div class="section">
+    <div class="section-title">缘 分 总 分</div>
+    <div class="score-main">
+      <div class="score-circle">
+        <svg viewBox="0 0 130 130" fill="none">
+          <circle cx="65" cy="65" r="56" stroke="rgba(244,167,185,.25)" stroke-width="10"/>
+          <circle cx="65" cy="65" r="56" stroke="url(#sg)" stroke-width="10"
+            stroke-linecap="round"
+            stroke-dasharray="351.86"
+            stroke-dashoffset="45.74"
+            transform="rotate(-90 65 65)"
+            style="animation: dashGrow 1.4s cubic-bezier(.25,1,.5,1) forwards; stroke-dashoffset: 351.86;"
+            id="scoreArc"/>
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#f4a7b9"/>
+              <stop offset="100%" stop-color="#9b2c52"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="score-num" id="scoreNum">87</span>
+        <span class="score-pct">缘分值</span>
+      </div>
+      <div class="score-right">
+        <div class="score-label">天作之合</div>
+        <div class="score-desc">命盘显示二人八字相生相合，缘分深厚，前世早有牵绊，今生得以重逢。</div>
+        <div class="score-tags">
+          <span class="score-tag">🔥 木火相生</span>
+          <span class="score-tag outline">日月相合</span>
+          <span class="score-tag outline">三合局</span>
+        </div>
+      </div>
+    </div>
+    <div class="sub-bars">
+      <div class="bar-row">
+        <span class="bar-label">性格相合</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:92%;animation-delay:.3s"></div></div>
+        <span class="bar-val">92%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">情感默契</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:85%;animation-delay:.5s"></div></div>
+        <span class="bar-val">85%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">五行相生</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:88%;animation-delay:.7s"></div></div>
+        <span class="bar-val">88%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">婚姻运势</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:78%;animation-delay:.9s"></div></div>
+        <span class="bar-val">78%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 2. 八字排盘 ══ -->
+  <div class="section">
+    <div class="section-title">八 字 排 盘</div>
+    <div class="bazi-board">
+      <!-- Person A -->
+      <div>
+        <div class="bazi-person-label" id="baziLabelA">✦ 晓雨 · 命盘</div>
+        <div class="bazi-pillars" id="baziA">
+          <!-- JS rendered -->
+        </div>
+      </div>
+      <!-- Person B -->
+      <div>
+        <div class="bazi-person-label" id="baziLabelB">✦ 子轩 · 命盘</div>
+        <div class="bazi-pillars" id="baziB"></div>
+      </div>
+    </div>
+    <!-- Wuxing relation -->
+    <div class="wuxing-rel">
+      <span class="rel-tag">🔥 木生火</span>
+      <span class="rel-desc">晓雨木命助长子轩火命，相辅相成，彼此滋养。</span>
+    </div>
+  </div>
+
+  <!-- ══ 3. 缘分亮点 ══ -->
+  <div class="section">
+    <div class="section-title">缘 分 亮 点</div>
+    <div class="item-list">
+      <div class="item" style="animation: fadeUp .5s ease .2s both">
+        <div class="item-icon">🌸</div>
+        <div class="item-body">
+          <div class="item-title">命宫相合，一见如故</div>
+          <div class="item-desc">二人命宫天干遥合，初次相遇便如旧识，相处自在无隔阂，磁场天然契合。</div>
+        </div>
+      </div>
+      <div class="item" style="animation: fadeUp .5s ease .35s both">
+        <div class="item-icon">💫</div>
+        <div class="item-body">
+          <div class="item-title">日支三合，情深意长</div>
+          <div class="item-desc">日支成三合局，主两人情感稳定持久，感情越走越深，是不离不弃的好缘分。</div>
+        </div>
+      </div>
+      <div class="item" style="animation: fadeUp .5s ease .5s both">
+        <div class="item-icon">✨</div>
+        <div class="item-body">
+          <div class="item-title">木火相生，互相成就</div>
+          <div class="item-desc">晓雨木命温柔滋养子轩火命热情，彼此在对方身上找到最好的自己，共同成长。</div>
+        </div>
+      </div>
+      <div class="item" style="animation: fadeUp .5s ease .65s both">
+        <div class="item-icon">🌙</div>
+        <div class="item-body">
+          <div class="item-title">月柱暗合，心意相通</div>
+          <div class="item-desc">月柱天干暗合，灵魂层面高度共鸣，时常有读心术般的默契，无需多言便懂彼此。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 4. 隐患预警 ══ -->
+  <div class="section warn-section">
+    <div class="section-title" style="color:#c9822a">⚠ 隐 患 预 警</div>
+    <div class="item-list">
+      <div class="item warn" style="animation: fadeUp .5s ease .2s both">
+        <div class="item-icon">🌪</div>
+        <div class="item-body">
+          <div class="item-title"><span class="warn-badge">注意</span>年柱相冲，聚少离多</div>
+          <div class="item-desc">年柱天干有冲，主二人早期家庭背景或价值观存在差异，易因外部环境压力而产生距离感，需注意沟通方式。</div>
+        </div>
+      </div>
+      <div class="item warn" style="animation: fadeUp .5s ease .35s both">
+        <div class="item-icon">🔥</div>
+        <div class="item-body">
+          <div class="item-title"><span class="warn-badge">留意</span>火旺缺水，情绪易激</div>
+          <div class="item-desc">合盘五行火旺水弱，双方情绪都较敏感激烈，争吵时容易说出伤人的话，建议冷静三秒再开口。</div>
+        </div>
+      </div>
+      <div class="item warn" style="animation: fadeUp .5s ease .5s both">
+        <div class="item-icon">⚖️</div>
+        <div class="item-body">
+          <div class="item-title"><span class="warn-badge">预防</span>时柱相刑，细节摩擦</div>
+          <div class="item-desc">时柱相刑代表生活细节层面容易产生小摩擦，习惯不同或生活方式差异会在长期相处中逐渐显现。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 5. 相处建议 ══ -->
+  <div class="section">
+    <div class="section-title">相 处 建 议</div>
+    <div class="advice-list">
+      <div class="advice-item" style="animation: fadeUp .5s ease .2s both">
+        <div class="advice-num">一</div>
+        <div class="advice-text">争吵时先各自冷静20分钟，你们的火旺特质会让情绪瞬间放大，冷静后再沟通效果会截然不同。</div>
+      </div>
+      <div class="advice-item" style="animation: fadeUp .5s ease .35s both">
+        <div class="advice-num">二</div>
+        <div class="advice-text">多做户外活动或共同爱好，木火组合喜欢自由流动的能量，共同体验新事物能极大增进感情。</div>
+      </div>
+      <div class="advice-item" style="animation: fadeUp .5s ease .5s both">
+        <div class="advice-num">三</div>
+        <div class="advice-text">晓雨多表达自己的小需求，不要默默承受；子轩要学会慢下来，给对方更多细腻的关注与回应。</div>
+      </div>
+      <div class="advice-item" style="animation: fadeUp .5s ease .65s both">
+        <div class="advice-num">四</div>
+        <div class="advice-text">重要决定前多交流家庭背景和价值观差异，提前理解彼此的"原生家庭设定"，能减少很多误解。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 6. 流年排盘 ══ -->
+  <div class="section">
+    <div class="section-title">流 年 排 盘</div>
+    <div class="liunian-grid">
+      <div class="liunian-cell">
+        <div class="liunian-year">2024</div>
+        <div class="liunian-gz">甲辰年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">稳步发展</div>
+      </div>
+      <div class="liunian-cell active">
+        <div class="liunian-year">2025</div>
+        <div class="liunian-gz">乙巳年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">🌸 桃花大运</div>
+      </div>
+      <div class="liunian-cell active">
+        <div class="liunian-year">2026</div>
+        <div class="liunian-gz">丙午年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">🎊 婚姻吉年</div>
+      </div>
+      <div class="liunian-cell">
+        <div class="liunian-year">2027</div>
+        <div class="liunian-gz">丁未年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">平稳蓄力</div>
+      </div>
+      <div class="liunian-cell">
+        <div class="liunian-year">2028</div>
+        <div class="liunian-gz">戊申年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">共创事业</div>
+      </div>
+      <div class="liunian-cell">
+        <div class="liunian-year">2029</div>
+        <div class="liunian-gz">己酉年</div>
+        <div class="liunian-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <div class="liunian-note">守望相助</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 7. 最佳发展时机 ══ -->
+  <div class="section">
+    <div class="section-title">最 佳 发 展 时 机</div>
+    <div class="timing-list">
+      <div class="timing-item best" style="animation: fadeUp .5s ease .2s both">
+        <div class="timing-date">2025年<br>3—5月</div>
+        <div class="timing-desc">乙巳年桃花入命，感情升温最佳窗口。此期间表白、确认关系成功率极高，勇敢迈出第一步！</div>
+        <span class="timing-badge best">大吉</span>
+      </div>
+      <div class="timing-item best" style="animation: fadeUp .5s ease .35s both">
+        <div class="timing-date">2026年<br>520前后</div>
+        <div class="timing-desc">丙午年婚姻宫旺，七月前完成订婚或求婚，与天时地利完美契合，步入婚姻的绝佳时节。</div>
+        <span class="timing-badge best">上上</span>
+      </div>
+      <div class="timing-item caution" style="animation: fadeUp .5s ease .5s both">
+        <div class="timing-date">2025年<br>7—9月</div>
+        <div class="timing-desc">流年遇刑冲，感情易生波折，不宜在此期间做重大承诺或关键决定，建议多陪伴少压力。</div>
+        <span class="timing-badge caution">谨慎</span>
+      </div>
+      <div class="timing-item best" style="animation: fadeUp .5s ease .65s both">
+        <div class="timing-date">2028年<br>全年</div>
+        <div class="timing-desc">戊申年财运与感情双旺，适合共同创业、置业，将感情转化为人生合伙的黄金时期。</div>
+        <span class="timing-badge best">大吉</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 8. 转运技巧 ══ -->
+  <div class="section">
+    <div class="section-title">转 运 技 巧</div>
+    <div class="zhuangyun-grid">
+      <div class="zhuangyun-item" style="animation: fadeUp .5s ease .2s both">
+        <div class="zhuangyun-icon">🌿</div>
+        <div class="zhuangyun-title">补水润情</div>
+        <div class="zhuangyun-desc">合盘缺水，可多佩戴蓝色或黑色水晶饰物，平日多饮水，增添情感流动性。</div>
+      </div>
+      <div class="zhuangyun-item" style="animation: fadeUp .5s ease .32s both">
+        <div class="zhuangyun-icon">🌸</div>
+        <div class="zhuangyun-title">桃花催缘</div>
+        <div class="zhuangyun-desc">在桃花位（东南方）摆放粉色鲜花，搭配红色绳结，有助于激活姻缘磁场。</div>
+      </div>
+      <div class="zhuangyun-item" style="animation: fadeUp .5s ease .44s both">
+        <div class="zhuangyun-icon">🕯️</div>
+        <div class="zhuangyun-title">月圆许愿</div>
+        <div class="zhuangyun-desc">每月望日（农历十五）二人同时看月亮，默想对彼此的心愿，月老自会感应。</div>
+      </div>
+      <div class="zhuangyun-item" style="animation: fadeUp .5s ease .56s both">
+        <div class="zhuangyun-icon">💎</div>
+        <div class="zhuangyun-title">幸运颜色</div>
+        <div class="zhuangyun-desc">约会时晓雨穿绿色系、子轩穿红色系，木火相生，彼此能量互相加持。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">✦ · · · ✦</div>
+
+  <!-- ══ 9. 专属姻缘签 ══ -->
+  <div class="section sign-section">
+    <div class="sign-embed">
+      <div class="sign-title-row">
+        <span>专 属 姻 缘 签</span>
+      </div>
+
+      <div class="sign-wrap" style="margin-top: 70px;">
+        <div class="knot"></div>
+        <div class="thread"></div>
+
+        <div class="sign-card">
+          <span class="sign-corner tl">🌸</span>
+          <span class="sign-corner tr">🌸</span>
+          <span class="sign-corner bl">🌺</span>
+          <span class="sign-corner br">🌺</span>
+
+          <div class="sign-head">
+            <div class="sign-grade">上 上 签</div>
+            <div style="color:var(--rose);font-size:11px;letter-spacing:4px;opacity:.6;margin-bottom:7px">✦ · ✦</div>
+            <div class="sign-name">桃 花 天 定</div>
+          </div>
+
+          <div class="sign-for">为 <em id="signForA">晓雨</em> 与 <em id="signForB">子轩</em> 而卜</div>
+
+          <div class="sign-rule"><span>❀</span></div>
+
+          <div class="sign-poem">
+            <span class="poem-line"><span class="poem-name" id="poemA">晓雨</span>逢春日</span>
+            <span class="poem-line">桃花映两心</span>
+            <span class="poem-line">月老牵红线</span>
+            <span class="poem-line">共赴好姻缘</span>
+          </div>
+
+          <div class="sign-rule" style="margin-top:12px"><span>❀</span></div>
+          <div style="text-align:center;font-size:9px;letter-spacing:3px;color:var(--gold);opacity:.7;margin-bottom:6px">命 盘 八 字</div>
+          <div class="sign-gz" id="signGz"></div>
+
+          <div class="sign-seal">缘</div>
+        </div>
+
+        <div class="score-badge-float">
+          <span class="snum" id="scoreBadge">87</span>
+          <span class="sunit">缘分值</span>
+        </div>
+      </div>
+
+      <div class="sign-tags">
+        <span class="sign-tag hi">🔥 木火相生</span>
+        <span class="sign-tag outline">天作之合</span>
+        <span class="sign-tag outline">日月相合</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CTA ══ -->
+  <div class="cta-section">
+    <button class="btn btn-outline" onclick="this.style.transform='scale(.95)';setTimeout(()=>this.style.transform='',150)">保存报告</button>
+    <button class="btn btn-primary" onclick="this.style.transform='scale(.95)';setTimeout(()=>this.style.transform='',150)">分享给 TA</button>
+  </div>
+
+  <div class="disclaimer">本报告基于传统命理文化生成，仅供娱乐参考<br>不构成任何情感或人生决策建议</div>
+  <div class="footer">✦ 八字缘分测算 · 月老赐缘 ✦</div>
+
+</div><!-- /container -->
+
+<script>
+// ── Data (injected by app) ──
+const DATA = {
+  nameA: '晓雨', nameB: '子轩',
+  dateA: '2000年3月15日 · 卯时', dateB: '1999年8月22日 · 午时',
+  score: 87,
+  ganzhiA: [
+    { tg: '庚', dz: '辰', wx: '金', wxCls: 'wx-metal' },
+    { tg: '丁', dz: '卯', wx: '木', wxCls: 'wx-wood' },
+    { tg: '甲', dz: '子', wx: '水', wxCls: 'wx-water' },
+    { tg: '丁', dz: '卯', wx: '木', wxCls: 'wx-wood' },
+  ],
+  ganzhiB: [
+    { tg: '己', dz: '卯', wx: '木', wxCls: 'wx-wood' },
+    { tg: '甲', dz: '申', wx: '金', wxCls: 'wx-metal' },
+    { tg: '庚', dz: '午', wx: '火', wxCls: 'wx-fire' },
+    { tg: '甲', dz: '午', wx: '火', wxCls: 'wx-fire' },
+  ],
+  signGanzhiA: ['庚','辰','丁','卯'],
+  signGanzhiB: ['己','卯','甲','午'],
+  poemFirstName: '晓雨',
+};
+
+const PILLAR_NAMES = ['年柱','月柱','日柱','时柱'];
+
+// Render bazi pillars
+function renderBazi(containerEl, pillars, baseDelay) {
+  pillars.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'pillar';
+    el.style.animationDelay = (baseDelay + i * 0.12) + 's';
+    el.innerHTML = `
+      <span class="pillar-name">${PILLAR_NAMES[i]}</span>
+      <div class="pillar-tg">${p.tg}</div>
+      <div class="pillar-dz">${p.dz}</div>
+      <span class="wx ${p.wxCls} pillar-wx">${p.wx}</span>
+    `;
+    containerEl.appendChild(el);
+  });
+}
+renderBazi(document.getElementById('baziA'), DATA.ganzhiA, 0.3);
+renderBazi(document.getElementById('baziB'), DATA.ganzhiB, 0.6);
+
+// Bazi labels
+document.getElementById('baziLabelA').textContent = '✦ ' + DATA.nameA + ' · 命盘';
+document.getElementById('baziLabelB').textContent = '✦ ' + DATA.nameB + ' · 命盘';
+
+// Sign gz row
+const signGzEl = document.getElementById('signGz');
+const allGz = [...DATA.signGanzhiA, null, ...DATA.signGanzhiB];
+allGz.forEach((ch, i) => {
+  const delay = (1.6 + i * 0.12) + 's';
+  if (ch === null) {
+    const dot = document.createElement('span');
+    dot.className = 'gz-dot'; dot.textContent = '·'; dot.style.animationDelay = delay;
+    signGzEl.appendChild(dot);
+  } else {
+    const el = document.createElement('div');
+    el.className = 'gz-c'; el.textContent = ch; el.style.animationDelay = delay;
+    signGzEl.appendChild(el);
+  }
+});
+
+// Names
+document.getElementById('nameA').textContent = DATA.nameA.split('').join(' ');
+document.getElementById('nameB').textContent = DATA.nameB.split('').join(' ');
+document.getElementById('signForA').textContent = DATA.nameA;
+document.getElementById('signForB').textContent = DATA.nameB;
+document.getElementById('poemA').textContent = DATA.poemFirstName;
+document.getElementById('scoreBadge').textContent = DATA.score;
+document.getElementById('scoreNum').textContent = DATA.score;
+
+// Score arc animation
+const arc = document.getElementById('scoreArc');
+const total = 351.86;
+const offset = total * (1 - DATA.score / 100);
+setTimeout(() => {
+  arc.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.25,1,.5,1)';
+  arc.style.strokeDashoffset = offset;
+}, 100);
+
+// Petals
+const container = document.getElementById('petalsContainer');
+const colors = ['#f7c5c5','#f4a7b9','#e07a9a','#f9d4df','#fbc4d4','#eda0b8'];
+for (let i = 0; i < 28; i++) {
+  const p = document.createElement('div');
+  p.className = 'petal';
+  const size = 10 + Math.random() * 14;
+  p.style.cssText = `
+    left:${Math.random()*100}%;
+    top:${-10-Math.random()*20}px;
+    background:${colors[Math.floor(Math.random()*colors.length)]};
+    width:${size}px; height:${size*1.2}px;
+    border-radius:${Math.random()>.5?'50% 0 50% 0':'0 50% 0 50%'};
+    animation-duration:${5+Math.random()*10}s;
+    animation-delay:${Math.random()*10}s;
+    transform:rotate(${Math.random()*360}deg);
+  `;
+  container.appendChild(p);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>缘分卡片 · 小红书分享</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --blush: #f7c5c5; --petal: #f4a7b9; --rose: #e07a9a;
+  --deep: #c45a7a; --crimson: #9b2c52;
+  --gold: #c9956a; --ink: #3d1a28; --paper: #fdf0f3;
+}
+
+body {
+  min-height: 100vh;
+  background: #f0d5df;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 20px 60px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.page-label {
+  font-size: 11px; letter-spacing: 6px; color: var(--crimson);
+  opacity: .5; margin-bottom: 24px; font-weight: 300;
+}
+
+/* ══ CARD ══ */
+.card-wrapper {
+  position: relative;
+}
+
+#shareCard {
+  width: 375px;
+  height: 500px; /* 3:4 ratio */
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(155,44,82,.35), 0 0 0 1px rgba(228,140,168,.4);
+  background: linear-gradient(160deg, #fff0f5 0%, #fde0ea 30%, #f8c8da 65%, #f0a8c0 100%);
+}
+
+/* ── SVG texture / watermark bg ── */
+.card-bg-pattern {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  opacity: .06;
+}
+
+/* ── Large faint stamp ── */
+.card-watermark {
+  position: absolute;
+  bottom: -30px; right: -30px;
+  width: 200px; height: 200px;
+  border: 6px solid var(--crimson);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px; font-weight: 700; color: var(--crimson);
+  letter-spacing: -2px;
+  opacity: .045; z-index: 0;
+  font-family: 'Noto Serif SC', serif;
+  transform: rotate(-15deg);
+}
+
+/* ── Blossom deco SVG (corner) ── */
+.blossom-tl {
+  position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none;
+  width: 140px; opacity: .22;
+}
+.blossom-br {
+  position: absolute; bottom: 0; right: 0; z-index: 1; pointer-events: none;
+  width: 110px; opacity: .18; transform: rotate(180deg);
+}
+
+/* ── Petals ── */
+.petals-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.fp { position: absolute; border-radius: 50% 0 50% 0; opacity: .35; animation: fpfall linear infinite; }
+@keyframes fpfall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+  10%  { opacity: .35; }
+  90%  { opacity: .18; }
+  100% { transform: translateY(520px) rotate(540deg); opacity: 0; }
+}
+
+/* ── Inner frame line ── */
+.inner-frame {
+  position: absolute; inset: 14px;
+  border: 1px solid rgba(196,90,122,.18);
+  border-radius: 14px; z-index: 2; pointer-events: none;
+}
+.inner-frame::before, .inner-frame::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+}
+.inner-frame::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid rgba(196,90,122,.5);
+  border-left: 2px solid rgba(196,90,122,.5);
+  border-radius: 14px 0 0 0;
+}
+.inner-frame::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid rgba(196,90,122,.5);
+  border-right: 2px solid rgba(196,90,122,.5);
+  border-radius: 0 0 14px 0;
+}
+
+/* ── Content layout ── */
+.card-content {
+  position: relative; z-index: 3;
+  height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 36px 28px 28px;
+  gap: 0;
+}
+
+/* Top brand */
+.card-brand {
+  font-size: 9px; letter-spacing: 7px; color: var(--crimson);
+  opacity: .45; font-weight: 300; margin-bottom: 18px;
+}
+
+/* Names row */
+.names-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 6px;
+}
+.person-block { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.p-name {
+  font-size: 22px; color: var(--crimson); letter-spacing: 3px; font-weight: 500;
+  line-height: 1;
+}
+.p-date { font-size: 9px; color: var(--deep); opacity: .6; letter-spacing: 1px; font-weight: 300; }
+.p-wx { display: flex; gap: 3px; margin-top: 2px; }
+.wx-chip {
+  font-size: 8px; padding: 1px 6px; border-radius: 8px;
+  font-weight: 400; letter-spacing: 1px;
+}
+.wx-fire  { background: rgba(255,200,200,.6); color: #c0392b; }
+.wx-wood  { background: rgba(200,240,200,.6); color: #27ae60; }
+.wx-water { background: rgba(200,220,255,.6); color: #2471a3; }
+.wx-metal { background: rgba(240,240,210,.6); color: #7d6608; }
+.wx-earth { background: rgba(245,230,200,.6); color: #935116; }
+
+.heart-mid {
+  font-size: 20px; color: var(--rose);
+  animation: hb 2.2s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes hb { 0%,100%{transform:scale(1)} 30%{transform:scale(1.28)} 60%{transform:scale(1.1)} }
+
+/* Divider */
+.h-line {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  margin: 10px 0;
+}
+.h-line::before, .h-line::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(196,90,122,.3), transparent);
+}
+.h-line span { font-size: 10px; color: var(--rose); opacity: .7; }
+
+/* Score block */
+.score-block {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin-bottom: 2px;
+}
+.score-ring-wrap {
+  position: relative; width: 108px; height: 108px;
+  display: flex; align-items: center; justify-content: center;
+}
+.score-ring-wrap svg { position: absolute; inset: 0; }
+.score-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+}
+.score-num {
+  font-size: 40px; line-height: 1; font-weight: 300; color: var(--crimson);
+  text-shadow: 0 2px 8px rgba(155,44,82,.2);
+}
+.score-unit { font-size: 10px; color: var(--deep); letter-spacing: 1px; opacity: .7; }
+
+.score-grade {
+  font-size: 17px; color: var(--crimson); letter-spacing: 5px; font-weight: 500;
+}
+.score-tags-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.stag {
+  font-size: 9px; padding: 3px 10px; border-radius: 16px;
+  letter-spacing: 1px; font-weight: 400;
+}
+.stag.fill {
+  background: linear-gradient(135deg, var(--rose), var(--crimson));
+  color: white; box-shadow: 0 2px 6px rgba(155,44,82,.3);
+}
+.stag.ghost {
+  background: rgba(255,255,255,.55); border: 1px solid rgba(196,90,122,.4);
+  color: var(--crimson);
+}
+
+/* Poem sign */
+.poem-wrap {
+  width: 100%;
+  background: rgba(255,255,255,.42);
+  border: 1px solid rgba(228,140,168,.35);
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin-top: 10px;
+  backdrop-filter: blur(4px);
+  position: relative; overflow: hidden;
+}
+.poem-wrap::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--petal), var(--rose), var(--petal), transparent);
+}
+.poem-label {
+  font-size: 8px; letter-spacing: 5px; color: var(--gold); opacity: .8; font-weight: 300;
+}
+.poem-title {
+  font-size: 13px; letter-spacing: 4px; color: var(--crimson); font-weight: 500;
+}
+.poem-text {
+  font-size: 12px; line-height: 2.1; letter-spacing: 2px;
+  color: var(--ink); text-align: center; font-weight: 300; opacity: .85;
+}
+.poem-em { color: var(--crimson); font-weight: 500; }
+
+/* Footer row: QR + tips */
+.card-footer {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: auto; padding-top: 10px;
+}
+.qr-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.qr-box {
+  width: 52px; height: 52px;
+  background: white;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(155,44,82,.15);
+  display: flex; align-items: center; justify-content: center;
+}
+.qr-box svg { width: 100%; height: 100%; }
+.qr-label { font-size: 8px; color: var(--deep); opacity: .55; letter-spacing: 2px; }
+
+.footer-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+}
+.footer-cta {
+  font-size: 10px; color: var(--crimson); letter-spacing: 1px; font-weight: 400; opacity: .7;
+}
+.footer-brand {
+  font-size: 9px; color: var(--deep); opacity: .4; letter-spacing: 3px; font-weight: 300;
+}
+.footer-seal {
+  width: 32px; height: 32px; background: var(--crimson); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: rgba(255,240,245,.9);
+  transform: rotate(-5deg);
+  box-shadow: 0 2px 8px rgba(155,44,82,.4);
+  margin-top: 2px;
+}
+
+/* ══ CONTROLS (outside card) ══ */
+.controls {
+  margin-top: 28px;
+  display: flex; gap: 12px;
+}
+.ctrl-btn {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px; letter-spacing: 3px;
+  padding: 11px 26px; border-radius: 40px;
+  cursor: pointer; border: none; transition: all .22s ease;
+  font-weight: 400;
+}
+.ctrl-btn.primary {
+  background: linear-gradient(135deg, var(--rose), var(--crimson));
+  color: white; box-shadow: 0 4px 16px rgba(155,44,82,.35);
+}
+.ctrl-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(155,44,82,.45); }
+.ctrl-btn.outline {
+  background: rgba(255,255,255,.6); color: var(--crimson);
+  border: 1.5px solid rgba(196,90,122,.45);
+  backdrop-filter: blur(4px);
+}
+.ctrl-btn.outline:hover { background: rgba(255,255,255,.85); }
+
+.save-hint {
+  margin-top: 12px;
+  font-size: 10px; color: var(--crimson); opacity: .45;
+  letter-spacing: 2px; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<p class="page-label">✦ 小 红 书 分 享 卡 片 ✦</p>
+
+<div class="card-wrapper">
+  <div id="shareCard">
+
+    <!-- BG pattern -->
+    <svg class="card-bg-pattern" viewBox="0 0 375 500" xmlns="http://www.w3.org/2000/svg">
+      <!-- diagonal lines texture -->
+      <defs>
+        <pattern id="diag" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+          <line x1="0" y1="0" x2="0" y2="20" stroke="#9b2c52" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="375" height="500" fill="url(#diag)"/>
+    </svg>
+
+    <!-- Blossom TL -->
+    <svg class="blossom-tl" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <line x1="190" y1="10" x2="20" y2="195" stroke="#c45a7a" stroke-width="2.5"/>
+      <line x1="110" y1="80" x2="10" y2="55" stroke="#c45a7a" stroke-width="1.8"/>
+      <line x1="145" y1="135" x2="25" y2="140" stroke="#c45a7a" stroke-width="1.8"/>
+      <g>
+        <circle cx="9" cy="50" r="11" fill="#f4a7b9"/>
+        <circle cx="-2" cy="38" r="7" fill="#f7c5c5"/>
+        <circle cx="24" cy="43" r="9" fill="#e07a9a"/>
+        <circle cx="4" cy="64" r="7" fill="#f4a7b9"/>
+        <circle cx="22" cy="62" r="6" fill="#f7c5c5"/>
+        <circle cx="13" cy="42" r="4" fill="white" opacity=".6"/>
+      </g>
+      <g>
+        <circle cx="24" cy="135" r="12" fill="#f4a7b9"/>
+        <circle cx="10" cy="122" r="8" fill="#f7c5c5"/>
+        <circle cx="40" cy="128" r="10" fill="#e07a9a"/>
+        <circle cx="16" cy="150" r="8" fill="#f4a7b9"/>
+        <circle cx="38" cy="148" r="7" fill="#f7c5c5"/>
+        <circle cx="27" cy="128" r="4" fill="white" opacity=".6"/>
+      </g>
+    </svg>
+
+    <!-- Blossom BR -->
+    <svg class="blossom-br" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <line x1="10" y1="190" x2="180" y2="5" stroke="#c45a7a" stroke-width="2.5"/>
+      <line x1="90" y1="120" x2="190" y2="145" stroke="#c45a7a" stroke-width="1.8"/>
+      <line x1="55" y1="65" x2="175" y2="60" stroke="#c45a7a" stroke-width="1.8"/>
+      <g>
+        <circle cx="191" cy="150" r="11" fill="#f4a7b9"/>
+        <circle cx="202" cy="162" r="7" fill="#f7c5c5"/>
+        <circle cx="176" cy="157" r="9" fill="#e07a9a"/>
+        <circle cx="196" cy="136" r="7" fill="#f4a7b9"/>
+        <circle cx="178" cy="138" r="6" fill="#f7c5c5"/>
+        <circle cx="189" cy="158" r="4" fill="white" opacity=".6"/>
+      </g>
+      <g>
+        <circle cx="176" cy="65" r="12" fill="#f4a7b9"/>
+        <circle cx="190" cy="78" r="8" fill="#f7c5c5"/>
+        <circle cx="160" cy="72" r="10" fill="#e07a9a"/>
+        <circle cx="184" cy="50" r="8" fill="#f4a7b9"/>
+        <circle cx="162" cy="52" r="7" fill="#f7c5c5"/>
+        <circle cx="173" cy="72" r="4" fill="white" opacity=".6"/>
+      </g>
+    </svg>
+
+    <!-- Watermark circle -->
+    <div class="card-watermark">缘</div>
+
+    <!-- Petals -->
+    <div class="petals-layer" id="petals"></div>
+
+    <!-- Inner frame -->
+    <div class="inner-frame"></div>
+
+    <!-- ══ Main Content ══ -->
+    <div class="card-content">
+
+      <!-- Brand -->
+      <div class="card-brand">✦ 八 字 缘 分 测 算 ✦</div>
+
+      <!-- Names -->
+      <div class="names-row">
+        <div class="person-block">
+          <div class="p-name" id="nameA">晓 雨</div>
+          <div class="p-date" id="dateA">2000 · 03 · 15</div>
+          <div class="p-wx">
+            <span class="wx-chip wx-wood">木</span>
+            <span class="wx-chip wx-fire">火</span>
+          </div>
+        </div>
+        <div class="heart-mid">❤</div>
+        <div class="person-block">
+          <div class="p-name" id="nameB">子 轩</div>
+          <div class="p-date" id="dateB">1999 · 08 · 22</div>
+          <div class="p-wx">
+            <span class="wx-chip wx-fire">火</span>
+            <span class="wx-chip wx-earth">土</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="h-line"><span>❀</span></div>
+
+      <!-- Score -->
+      <div class="score-block">
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 108 108" fill="none">
+            <circle cx="54" cy="54" r="46" stroke="rgba(244,167,185,.22)" stroke-width="8"/>
+            <circle cx="54" cy="54" r="46" stroke="url(#rg)" stroke-width="8"
+              stroke-linecap="round"
+              stroke-dasharray="289.03"
+              stroke-dashoffset="289.03"
+              transform="rotate(-90 54 54)"
+              id="ring"/>
+            <defs>
+              <linearGradient id="rg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#f4a7b9"/>
+                <stop offset="100%" stop-color="#9b2c52"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="score-inner">
+            <span class="score-num" id="scoreNum">87</span>
+            <span class="score-unit">缘分值</span>
+          </div>
+        </div>
+        <div class="score-grade" id="scoreGrade">天 作 之 合</div>
+        <div class="score-tags-row">
+          <span class="stag fill" id="wxTag">🔥 木火相生</span>
+          <span class="stag ghost">日月相合</span>
+          <span class="stag ghost">三合局</span>
+        </div>
+      </div>
+
+      <!-- Poem -->
+      <div class="poem-wrap">
+        <div class="poem-label">专 属 姻 缘 签 · 上 上 签</div>
+        <div class="poem-title">桃 花 天 定</div>
+        <div class="poem-text">
+          <span class="poem-em" id="poemName">晓雨</span>逢春日，桃花映两心<br>
+          月老牵红线，共赴好姻缘
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer">
+        <div class="qr-block">
+          <!-- Simple QR placeholder (CSS-drawn pattern) -->
+          <div class="qr-box">
+            <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <!-- QR code simplified pattern -->
+              <rect width="40" height="40" fill="white"/>
+              <!-- top-left finder -->
+              <rect x="2" y="2" width="12" height="12" rx="1" fill="#9b2c52"/>
+              <rect x="4" y="4" width="8" height="8" rx="0.5" fill="white"/>
+              <rect x="5.5" y="5.5" width="5" height="5" rx="0.3" fill="#9b2c52"/>
+              <!-- top-right finder -->
+              <rect x="26" y="2" width="12" height="12" rx="1" fill="#9b2c52"/>
+              <rect x="28" y="4" width="8" height="8" rx="0.5" fill="white"/>
+              <rect x="29.5" y="5.5" width="5" height="5" rx="0.3" fill="#9b2c52"/>
+              <!-- bottom-left finder -->
+              <rect x="2" y="26" width="12" height="12" rx="1" fill="#9b2c52"/>
+              <rect x="4" y="28" width="8" height="8" rx="0.5" fill="white"/>
+              <rect x="5.5" y="29.5" width="5" height="5" rx="0.3" fill="#9b2c52"/>
+              <!-- data modules (decorative) -->
+              <rect x="16" y="2" width="2" height="2" fill="#9b2c52"/>
+              <rect x="20" y="2" width="2" height="2" fill="#9b2c52"/>
+              <rect x="16" y="6" width="2" height="2" fill="#9b2c52"/>
+              <rect x="22" y="4" width="2" height="4" fill="#9b2c52"/>
+              <rect x="16" y="10" width="4" height="2" fill="#9b2c52"/>
+              <rect x="16" y="14" width="2" height="2" fill="#9b2c52"/>
+              <rect x="20" y="14" width="2" height="2" fill="#9b2c52"/>
+              <rect x="24" y="14" width="2" height="2" fill="#9b2c52"/>
+              <rect x="2" y="16" width="2" height="2" fill="#9b2c52"/>
+              <rect x="6" y="16" width="4" height="2" fill="#9b2c52"/>
+              <rect x="2" y="20" width="4" height="2" fill="#9b2c52"/>
+              <rect x="8" y="20" width="2" height="2" fill="#9b2c52"/>
+              <rect x="2" y="24" width="2" height="2" fill="#9b2c52"/>
+              <rect x="6" y="22" width="2" height="4" fill="#9b2c52"/>
+              <rect x="14" y="16" width="2" height="4" fill="#9b2c52"/>
+              <rect x="18" y="16" width="4" height="2" fill="#9b2c52"/>
+              <rect x="14" y="22" width="4" height="2" fill="#9b2c52"/>
+              <rect x="20" y="20" width="2" height="4" fill="#9b2c52"/>
+              <rect x="24" y="18" width="2" height="2" fill="#9b2c52"/>
+              <rect x="26" y="16" width="2" height="4" fill="#9b2c52"/>
+              <rect x="30" y="16" width="2" height="2" fill="#9b2c52"/>
+              <rect x="34" y="16" width="4" height="2" fill="#9b2c52"/>
+              <rect x="28" y="20" width="4" height="2" fill="#9b2c52"/>
+              <rect x="34" y="20" width="4" height="4" fill="#9b2c52"/>
+              <rect x="26" y="24" width="2" height="4" fill="#9b2c52"/>
+              <rect x="30" y="26" width="4" height="2" fill="#9b2c52"/>
+              <rect x="36" y="26" width="2" height="2" fill="#9b2c52"/>
+              <rect x="30" y="30" width="2" height="2" fill="#9b2c52"/>
+              <rect x="34" y="30" width="4" height="2" fill="#9b2c52"/>
+              <rect x="10" y="28" width="2" height="4" fill="#9b2c52"/>
+              <rect x="14" y="26" width="4" height="2" fill="#9b2c52"/>
+              <rect x="16" y="30" width="2" height="4" fill="#9b2c52"/>
+              <rect x="20" y="28" width="2" height="2" fill="#9b2c52"/>
+              <rect x="22" y="32" width="4" height="2" fill="#9b2c52"/>
+            </svg>
+          </div>
+          <div class="qr-label">扫码测算</div>
+        </div>
+
+        <div class="footer-right">
+          <div class="footer-cta">去测测你们的缘分 →</div>
+          <div class="footer-brand">八字缘分测算</div>
+          <div class="footer-seal">缘</div>
+        </div>
+      </div>
+
+    </div><!-- /card-content -->
+  </div><!-- /shareCard -->
+</div><!-- /card-wrapper -->
+
+<div class="controls">
+  <button class="ctrl-btn outline" id="previewBtn">预览效果</button>
+  <button class="ctrl-btn primary" id="saveBtn">保存图片</button>
+</div>
+<p class="save-hint">点击「保存图片」下载 PNG，可直接发布至小红书</p>
+
+<script>
+// ── Data ──
+const DATA = {
+  nameA: '晓雨', nameB: '子轩',
+  dateA: '2000 · 03 · 15', dateB: '1999 · 08 · 22',
+  score: 87,
+  grade: '天 作 之 合',
+  wxTag: '🔥 木火相生',
+  poemName: '晓雨',
+};
+
+// Inject data
+document.getElementById('nameA').textContent = DATA.nameA.split('').join(' ');
+document.getElementById('nameB').textContent = DATA.nameB.split('').join(' ');
+document.getElementById('dateA').textContent = DATA.dateA;
+document.getElementById('dateB').textContent = DATA.dateB;
+document.getElementById('scoreNum').textContent = DATA.score;
+document.getElementById('scoreGrade').textContent = DATA.grade;
+document.getElementById('wxTag').textContent = DATA.wxTag;
+document.getElementById('poemName').textContent = DATA.poemName;
+
+// Score ring animation
+const ring = document.getElementById('ring');
+const total = 289.03;
+const offset = total * (1 - DATA.score / 100);
+setTimeout(() => {
+  ring.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.25,1,.5,1)';
+  ring.style.strokeDashoffset = offset;
+}, 200);
+
+// Petals
+const pLayer = document.getElementById('petals');
+const pColors = ['#f7c5c5','#f4a7b9','#e07a9a','#f9d4df','#fbc4d4'];
+for (let i = 0; i < 18; i++) {
+  const p = document.createElement('div');
+  p.className = 'fp';
+  const sz = 8 + Math.random() * 10;
+  p.style.cssText = `
+    left:${Math.random()*100}%;
+    top:${-10-Math.random()*10}px;
+    background:${pColors[Math.floor(Math.random()*pColors.length)]};
+    width:${sz}px; height:${sz*1.2}px;
+    border-radius:${Math.random()>.5?'50% 0 50% 0':'0 50% 0 50%'};
+    animation-duration:${6+Math.random()*8}s;
+    animation-delay:${Math.random()*8}s;
+    transform:rotate(${Math.random()*360}deg);
+  `;
+  pLayer.appendChild(p);
+}
+
+// Save button
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = '生成中…';
+  btn.disabled = true;
+
+  // Temporarily pause animations for clean capture
+  const card = document.getElementById('shareCard');
+
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 3, // high res
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+    });
+
+    const link = document.createElement('a');
+    link.download = `缘分报告_${DATA.nameA}与${DATA.nameB}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('保存失败，请截图保存');
+  }
+
+  btn.textContent = '保存图片';
+  btn.disabled = false;
+});
+
+document.getElementById('previewBtn').addEventListener('click', () => {
+  document.getElementById('shareCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+</script>
+</body>
+</html>
