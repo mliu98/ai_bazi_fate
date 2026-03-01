@@ -1017,3 +1017,133 @@
 .bz-progress-pct   { font-family: 'Noto Serif SC', serif; font-size: 13px; color: var(--bz-crimson); }
 .bz-progress-bar-bg { height: 4px; background: rgba(244,167,185,.3); border-radius: 10px; overflow: hidden; }
 .bz-progress-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(to right, var(--bz-petal), var(--bz-crimson)); transition: width .5s ease; }
+
+/* ── iPad 响应式样式 ── */
+@media screen and (min-width: 768px) {
+  .bz-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+  
+  .bz-report-header h1 {
+    font-size: 32px;
+  }
+  
+  .bz-form-section {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .bz-form-label {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .bz-text-input {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+  
+  .bz-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+  
+  .bz-btn-primary {
+    font-size: 17px;
+    padding: 16px 28px;
+  }
+  
+  .bz-subtitle {
+    font-size: 14px;
+  }
+  
+  .bz-footer {
+    font-size: 13px;
+  }
+  
+  .bz-disclaimer {
+    font-size: 12px;
+  }
+  
+  .bz-h-ornament {
+    font-size: 16px;
+  }
+  
+  /* Loading 页 */
+  .bz-loading-center {
+    padding: 60px 40px;
+  }
+  
+  .bz-loading-chars {
+    gap: 16px;
+  }
+  
+  .bz-loading-char {
+    font-size: 36px;
+  }
+  
+  .bz-loading-heart {
+    fontSize: 24px;
+  }
+  
+  .bz-loading-quote {
+    font-size: 18px;
+  }
+  
+  .bz-progress-wrap {
+    max-width: 400px;
+    padding: 24px 32px;
+  }
+  
+  /* 选项按钮 */
+  .question-option {
+    padding: 16px 12px;
+    font-size: 15px;
+  }
+}
+
+/* ── 大屏幕 iPad Pro ── */
+@media screen and (min-width: 1024px) {
+  .bz-container {
+    max-width: 680px;
+    padding: 48px 40px;
+  }
+  
+  .bz-report-header h1 {
+    font-size: 36px;
+    letter-spacing: 10px;
+  }
+  
+  .bz-form-section {
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .bz-form-label {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  
+  .bz-text-input {
+    padding: 16px 18px;
+    font-size: 17px;
+  }
+  
+  .bz-btn {
+    padding: 16px 28px;
+    font-size: 17px;
+  }
+  
+  .bz-btn-primary {
+    font-size: 18px;
+    padding: 18px 32px;
+  }
+  
+  /* Loading 页 */
+  .bz-loading-center {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
